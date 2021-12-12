@@ -2,6 +2,7 @@ package imageutil
 
 import (
 	"image"
+	"image/color"
 	"math"
 )
 
@@ -25,4 +26,18 @@ func CalculateDistance(i1 image.Image, i2 image.Image) float64 {
 		}
 	}
 	return r
+}
+
+type CopyOnRead struct {
+	Copy *image.RGBA
+	image.Image
+}
+
+func (cow *CopyOnRead) At(x, y int) color.Color {
+	if cow.Copy == nil {
+		cow.Copy = image.NewRGBA(cow.Image.Bounds())
+	}
+	c := cow.Image.At(x, y)
+	cow.Copy.Set(x, y, c)
+	return c
 }

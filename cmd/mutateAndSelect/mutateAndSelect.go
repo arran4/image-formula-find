@@ -4,11 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"image"
-	"image-formula-find"
 	"image-formula-find/dna1"
-	"image-formula-find/drawer1"
 	"image-formula-find/imageutil"
-	"image/color"
 	"image/draw"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -20,68 +17,6 @@ import (
 	"sync"
 	"time"
 )
-
-type CopyOnRead struct {
-	Copy *image.RGBA
-	image.Image
-}
-
-func (cow *CopyOnRead) At(x, y int) color.Color {
-	if cow.Copy == nil {
-		cow.Copy = image.NewRGBA(cow.Image.Bounds())
-	}
-	c := cow.Image.At(x, y)
-	cow.Copy.Set(x, y, c)
-	return c
-}
-
-type Sorter struct {
-	children []*Individual
-}
-
-func (s *Sorter) Len() int {
-	return len(s.children)
-}
-
-func (s *Sorter) Less(i, j int) bool {
-	return s.children[i].Score < s.children[j].Score
-}
-
-func (s *Sorter) Swap(i, j int) {
-	s.children[i], s.children[j] = s.children[j], s.children[i]
-}
-
-type Individual struct {
-	DNA    string
-	Parent []*Individual
-	Score  float64
-	rf     *image_formula_find.Function
-	bf     *image_formula_find.Function
-	gf     *image_formula_find.Function
-	i      draw.Image
-	d      *drawer1.Drawer
-}
-
-func (i *Individual) Calculate(plotSize image.Rectangle, srcimg image.Image) {
-	rd, bd, gd := dna1.SplitString3(i.DNA)
-	i.rf = dna1.ParseFunction(rd)
-	i.bf = dna1.ParseFunction(bd)
-	i.gf = dna1.ParseFunction(gd)
-	i.d = &drawer1.Drawer{
-		RedFormula:   i.rf,
-		BlueFormula:  i.bf,
-		GreenFormula: i.gf,
-	}
-	i.i = image.NewRGBA(plotSize.Bounds())
-	draw.Draw(i.i, plotSize, i.d, image.Pt(0, 0), draw.Src)
-	i.Score = imageutil.CalculateDistance(srcimg, i.i)
-}
-
-func (i *Individual) CsvRow() []string {
-	return []string{
-		i.DNA, i.rf.String(), i.bf.String(), i.gf.String(), fmt.Sprintf("%0.2f", i.Score),
-	}
-}
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
@@ -106,7 +41,7 @@ func main() {
 	csvw := csv.NewWriter(fcsv)
 	defer csvw.Flush()
 	var row []string
-	var lastGeneration []*Individual
+	var lastGeneration []*imageutil.Individual
 	for i := 0; i < childrenCount; i++ {
 		row = append(row,
 			fmt.Sprintf("C%d Dna", i+1),
@@ -119,23 +54,23 @@ func main() {
 	csvw.Write(row)
 	for generation := 0; generation < generations; generation++ {
 		log.Printf("Generation %d", generation+1)
-		var children = make([]*Individual, 0, len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*len(lastGeneration)+childrenCount+1)
 
 		children = append(children, lastGeneration...)
 
 		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
 			p1 := lastGeneration[i%10]
 			p2 := lastGeneration[i/10]
-			children = append(children, &Individual{
+			children = append(children, &imageutil.Individual{
 				DNA: dna1.Breed(p1.DNA, p2.DNA),
-				Parent: []*Individual{
+				Parent: []*imageutil.Individual{
 					p1, p2,
 				},
 			})
 		}
 
 		for {
-			children = append(children, &Individual{
+			children = append(children, &imageutil.Individual{
 				DNA: dna1.RndStr(50),
 			})
 			if len(children) > childrenCount {
@@ -147,20 +82,20 @@ func main() {
 		wg := sync.WaitGroup{}
 		for fi := range children {
 			wg.Add(1)
-			go func(i int, child *Individual) {
+			go func(i int, child *imageutil.Individual) {
 				defer wg.Done()
 				child.Calculate(plotSize, srcimg)
 			}(fi, children[fi])
 		}
 		wg.Wait()
 
-		sort.Sort(sort.Reverse(&Sorter{
-			children: children,
+		sort.Sort(sort.Reverse(&imageutil.Sorter{
+			Children: children,
 		}))
 
 		if (generation % (generations / logGenerations)) == 0 {
 			for i, child := range children[:10] {
-				draw.Draw(destimg, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*(generation/(generations/logGenerations)))), child.i, image.Pt(0, 0), draw.Src)
+				draw.Draw(destimg, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*(generation/(generations/logGenerations)))), child.Image(), image.Pt(0, 0), draw.Src)
 				row = append(row, child.CsvRow()...)
 			}
 		}
