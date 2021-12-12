@@ -1,0 +1,24 @@
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.13.1' # The Go version to download (if necessary) and use.
+      - run: go version
+      - run: go run ./cmd/mutateAndSelect
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Output file
+          path: output.*
+
