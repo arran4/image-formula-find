@@ -153,6 +153,7 @@ func main() {
 			Children: children,
 		}))
 
+		lastGeneration = make([]*imageutil.Individual, 0, childrenCount)
 		lineages := map[string]int{}
 		for len(lastGeneration) < childrenCount && len(children) > 0 {
 			child := children[0]
