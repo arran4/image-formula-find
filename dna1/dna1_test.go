@@ -86,3 +86,116 @@ func TestSplitString3(t *testing.T) {
 		})
 	}
 }
+
+func TestUnshiftMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UnshiftMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("UnshiftMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestAppendMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AppendMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("AppendMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestPopMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PopMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("PopMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestShiftMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ShiftMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("ShiftMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestDeleteMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DeleteMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("DeleteMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestInsertMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := InsertMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("InsertMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}
+func TestPositionMutate(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		rlen int
+	}{
+		{name: "basic", a: "basic", rlen: 5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PositionMutate(tt.a); len(got) != tt.rlen {
+				t.Errorf("PositionMutate() = %v %#v, want len %v", len(got), got, tt.rlen)
+			}
+		})
+	}
+}

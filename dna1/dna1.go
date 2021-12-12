@@ -2,7 +2,6 @@ package dna1
 
 import (
 	"image-formula-find"
-	"log"
 	"math"
 	"math/rand"
 )
@@ -217,11 +216,75 @@ func SplitString3(arg string) (string, string, string) {
 		if int(math.Round(incs*float64(i2))) > len(arg) {
 			break
 		}
-		log.Printf("%s %d %d", arg, int(math.Round(incs*float64(i1))), int(math.Round(incs*float64(i2))))
 		p1 = arg[0 : int(math.Round(incs*float64(i1)))+1]
 		p2 = arg[int(math.Round(incs*float64(i1)))+1 : 1+int(math.Round(incs*float64(i2)))+1]
 		p3 = arg[1+int(math.Round(incs*float64(i2)))+1:]
 		return p1, p2, p3
 	}
 	return p1, p2, p3
+}
+
+func Mutate(a string) string {
+	switch rand.Int31n(12) {
+	case 0:
+		return AppendMutate(a)
+	case 1:
+		return PopMutate(a)
+	case 2:
+		return ShiftMutate(a)
+	case 3:
+		return UnshiftMutate(a)
+	case 4:
+		return DeleteMutate(a)
+	case 5:
+		return InsertMutate(a)
+	default:
+		return PositionMutate(a)
+	}
+}
+
+func UnshiftMutate(a string) string {
+	return string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a
+}
+
+func InsertMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a[p:]
+}
+
+func DeleteMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + a[p+1:]
+}
+
+func ShiftMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	return a[1:]
+}
+
+func PopMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	return a[:len(a)-1]
+}
+
+func AppendMutate(a string) string {
+	return a + string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+}
+
+func PositionMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a[p+1:]
 }

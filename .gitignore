@@ -2,3 +2,4 @@
 *.gif
 *.png
 *.iml
+/out.csv
