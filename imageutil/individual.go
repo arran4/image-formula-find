@@ -36,7 +36,25 @@ type Individual struct {
 	d      *drawer1.Drawer
 }
 
-func (i *Individual) Calculate(plotSize image.Rectangle, srcimg image.Image) {
+type Required interface {
+	PlotSize() image.Rectangle
+	SourceImage() image.Image
+}
+
+type BasicRequired struct {
+	R image.Rectangle
+	I image.Image
+}
+
+func (b *BasicRequired) PlotSize() image.Rectangle {
+	return b.R
+}
+
+func (b *BasicRequired) SourceImage() image.Image {
+	return b.I
+}
+
+func (i *Individual) Calculate(required Required) {
 	rd, bd, gd := dna1.SplitString3(i.DNA)
 	i.rf = dna1.ParseFunction(rd)
 	i.bf = dna1.ParseFunction(bd)
@@ -46,9 +64,9 @@ func (i *Individual) Calculate(plotSize image.Rectangle, srcimg image.Image) {
 		BlueFormula:  i.bf,
 		GreenFormula: i.gf,
 	}
-	i.i = image.NewRGBA(plotSize.Bounds())
-	draw.Draw(i.i, plotSize, i.d, image.Pt(0, 0), draw.Src)
-	i.Score = CalculateDistance(srcimg, i.i)
+	i.i = image.NewRGBA(required.PlotSize().Bounds())
+	draw.Draw(i.i, required.PlotSize(), i.d, image.Pt(0, 0), draw.Src)
+	i.Score = CalculateDistance(required.SourceImage(), i.i)
 }
 
 func (i *Individual) CsvRow() []string {

@@ -84,7 +84,10 @@ func main() {
 			wg.Add(1)
 			go func(i int, child *imageutil.Individual) {
 				defer wg.Done()
-				child.Calculate(plotSize, srcimg)
+				child.Calculate(&imageutil.BasicRequired{
+					R: plotSize,
+					I: srcimg,
+				})
 			}(fi, children[fi])
 		}
 		wg.Wait()
