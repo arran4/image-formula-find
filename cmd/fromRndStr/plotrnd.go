@@ -2,21 +2,25 @@ package main
 
 import (
 	"image"
-	image_formula_find "image-formula-find"
+	"image-formula-find/dna1"
 	"image-formula-find/drawer1"
 	"image/draw"
 	"image/png"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
+	rand.Seed(time.Now().UnixNano())
 	i := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	rf, bf, gf := dna1.SplitString3(dna1.RndStr(18))
 	d := &drawer1.Drawer{
-		RedFormula:   image_formula_find.ParseFunction("x = y + 1"),
-		BlueFormula:  image_formula_find.ParseFunction("x = 2 * y + 3"),
-		GreenFormula: image_formula_find.ParseFunction("x = 4 * y + 5"),
+		RedFormula:   dna1.ParseFunction(rf),
+		BlueFormula:  dna1.ParseFunction(bf),
+		GreenFormula: dna1.ParseFunction(gf),
 	}
 	draw.Draw(i, i.Rect, d, image.Pt(0, 0), draw.Src)
 	log.Printf("Red: %s", d.RedFormula.String())
