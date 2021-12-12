@@ -22,7 +22,7 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	rand.Seed(time.Now().UnixNano())
 	const logGenerations = 10
-	const generations = 10
+	const generations = 1000
 	const childrenCount = 10
 
 	srcimg := LoadImage()
@@ -52,6 +52,16 @@ func main() {
 	}
 	headerSize := len(row)
 	csvw.Write(row)
+	newDNA := make(chan string, 100)
+	go func() {
+		for {
+			dna := dna1.RndStr(50)
+			if !dna1.Valid(dna) {
+				continue
+			}
+			newDNA <- dna
+		}
+	}()
 	for generation := 0; generation < generations; generation++ {
 		log.Printf("Generation %d", generation+1)
 		const mutations = 5
@@ -59,14 +69,32 @@ func main() {
 
 		children = append(children, lastGeneration...)
 
+		seen := map[string]struct{}{}
+
 		for _, p := range lastGeneration {
-			for i := 0; i < mutations; i++ {
-				mutate := p.DNA
-				for m := 0; m <= i; m++ {
-					mutate = dna1.Mutate(mutate)
+			dna := p.DNA
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			children = append(children, p)
+		}
+
+		for _, p := range lastGeneration {
+			for i := 0; i <= mutations; i++ {
+				dna := p.DNA
+				for m := 0; m < i; m++ {
+					dna = dna1.Mutate(dna)
+				}
+				if _, ok := seen[dna]; ok {
+					continue
+				}
+				seen[dna] = struct{}{}
+				if !dna1.Valid(dna) {
+					continue
 				}
 				children = append(children, &imageutil.Individual{
-					DNA:             mutate,
+					DNA:             dna,
 					Parent:          []*imageutil.Individual{p},
 					FirstGeneration: generation,
 				})
@@ -76,21 +104,36 @@ func main() {
 		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
 			p1 := lastGeneration[i%10]
 			p2 := lastGeneration[i/10]
+			dna := dna1.Breed(p1.DNA, p2.DNA)
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			if !dna1.Valid(dna) {
+				continue
+			}
 			children = append(children, &imageutil.Individual{
-				DNA: dna1.Breed(p1.DNA, p2.DNA),
+				DNA: dna,
 				Parent: []*imageutil.Individual{
 					p1, p2,
 				},
+				FirstGeneration: generation,
 			})
 		}
 
-		for {
-			children = append(children, &imageutil.Individual{
-				DNA: dna1.RndStr(50),
-			})
-			if len(children) > childrenCount {
-				break
+		for len(children) < childrenCount {
+			dna := <-newDNA
+			if _, ok := seen[dna]; ok {
+				continue
 			}
+			seen[dna] = struct{}{}
+			if !dna1.Valid(dna) {
+				continue
+			}
+			children = append(children, &imageutil.Individual{
+				DNA:             dna,
+				FirstGeneration: generation,
+			})
 		}
 
 		row = make([]string, 0, headerSize)
@@ -111,15 +154,30 @@ func main() {
 			Children: children,
 		}))
 
+		lastGeneration = children[:10]
+		children = children[10:]
+		for i := range lastGeneration {
+			if len(children) == 0 {
+				break
+			}
+			child := lastGeneration[i]
+			if generation-child.FirstGeneration > 10 {
+				lastGeneration[i] = children[0]
+				children = children[0:]
+			}
+		}
+		sort.Sort(sort.Reverse(&imageutil.Sorter{
+			Children: lastGeneration,
+		}))
+
 		if (generation % (generations / logGenerations)) == 0 {
-			for i, child := range children[:10] {
+			for i, child := range lastGeneration {
 				draw.Draw(destimg, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*(generation/(generations/logGenerations)))), child.Image(), image.Pt(0, 0), draw.Src)
 				row = append(row, child.CsvRow()...)
 			}
 		}
 		csvw.Write(row)
 
-		lastGeneration = children[:10]
 	}
 	fout, err := os.Create("out.png")
 	if err != nil {
