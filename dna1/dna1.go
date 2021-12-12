@@ -202,7 +202,7 @@ func SplitString3(arg string) (string, string, string) {
 			continue
 		}
 		var i2 int
-		for i2-i1 < 2 {
+		for i2-i1 < 2 && len(arg) > 0 {
 			c2 := arg[0]
 			arg = arg[1:]
 			i2, ok = runeMapPos[rune(c2)]
@@ -292,4 +292,28 @@ func PositionMutate(a string) string {
 	}
 	p := int(rand.Int31n(int32(len(a))))
 	return a[:p] + string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a[p+1:]
+}
+
+func Breed(a string, b string) string {
+	p := 10
+	if len(a) < p {
+		p = len(a)
+	}
+	if len(b) < p {
+		p = len(b)
+	}
+	result := ""
+	for i := 0; i < p; i++ {
+		var s string
+		switch rand.Int31n(2) {
+		case 0:
+			s = a
+		case 1:
+			s = b
+		}
+		st := (len(s) / p) * i
+		e := (len(s)/p)*(i+1) - 1
+		result += s[st:e]
+	}
+	return result
 }
