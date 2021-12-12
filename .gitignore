@@ -1,5 +1,5 @@
 /.idea
-*.gif
-*.png
+out*.gif
+out*.png
 *.iml
 /out.csv
