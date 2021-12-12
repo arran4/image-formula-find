@@ -136,7 +136,6 @@ func main() {
 			})
 		}
 
-		row = make([]string, 0, headerSize)
 		wg := sync.WaitGroup{}
 		for fi := range children {
 			wg.Add(1)
@@ -171,12 +170,13 @@ func main() {
 		}))
 
 		if (generation % (generations / logGenerations)) == 0 {
+			row = make([]string, 0, headerSize)
 			for i, child := range lastGeneration {
 				draw.Draw(destimg, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*(generation/(generations/logGenerations)))), child.Image(), image.Pt(0, 0), draw.Src)
 				row = append(row, child.CsvRow()...)
 			}
+			csvw.Write(row)
 		}
-		csvw.Write(row)
 
 	}
 	fout, err := os.Create("out.png")
