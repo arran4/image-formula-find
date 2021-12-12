@@ -216,11 +216,10 @@ func (worker *WorkerDetails) Work() {
 		for len(lastGeneration) < childrenCount && len(children) > 0 {
 			child := children[0]
 			children = children[1:]
-			ph := ""
 			if v, ok := lineages[child.Lineage]; ok && v > 3 {
 				continue
 			}
-			lineages[ph]++
+			lineages[child.Lineage]++
 			lastGeneration = append(lastGeneration, child)
 		}
 		sort.Sort(sort.Reverse(&imageutil.Sorter{
