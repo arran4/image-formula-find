@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"image"
-	image_formula_find "image-formula-find"
+	"image-formula-find"
 	"image-formula-find/dna1"
 	"image-formula-find/drawer1"
 	"image-formula-find/imageutil"
