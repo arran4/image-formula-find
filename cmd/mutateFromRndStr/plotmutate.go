@@ -32,7 +32,7 @@ func main() {
 	var row []string
 	var children []string
 	for i := 0; i < childrenCount; i++ {
-		children = append(children, dna1.RndStr(18))
+		children = append(children, dna1.RndStr(50))
 		row = append(row, fmt.Sprintf("C%d Dna", i+1), fmt.Sprintf("C%d Formula Red", i+1), fmt.Sprintf("C%d Formula Blue", i+1), fmt.Sprintf("C%d Formula Green", i+1))
 	}
 	csvw.Write(row)

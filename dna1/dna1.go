@@ -110,10 +110,15 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 		}
 
 	case chars[0], chars[len(chars)/2], chars[len(chars)-1]:
-		fallthrough
-	default:
 		return ParseConst(arg, c)
+	default:
+		return MakeConst(arg, c)
 	}
+}
+
+func MakeConst(arg string, c uint8) (string, image_formula_find.Expression) {
+	i := runeMapPos[rune(c)]
+	return arg, &image_formula_find.Const{Value: float64(i)}
 }
 
 func ParseConst(arg string, c uint8) (string, image_formula_find.Expression) {

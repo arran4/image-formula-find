@@ -1,6 +1,8 @@
 package dna1
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSplitString2(t *testing.T) {
 	tests := []struct {
@@ -199,3 +201,15 @@ func TestPositionMutate(t *testing.T) {
 		})
 	}
 }
+
+//func TestBugToMany0s(t *testing.T) {
+//	var dna = "FtdRwbSsJmtMArU4OIz"
+//	rd, _, _ := SplitString3(dna)
+//	rf := ParseFunction(rd)
+//	switch lhs := rf.Equals.LHS.(type) {
+//	case *image_formula_find.Const:
+//		if lhs.Value == 0 {
+//			t.Fatalf("Got 0 again")
+//		}
+//	}
+//}
