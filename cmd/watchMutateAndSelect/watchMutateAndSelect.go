@@ -42,6 +42,7 @@ type WorkerDetails struct {
 	plotSize       image.Rectangle
 	generation     int
 	esrcimg        *ebiten.Image
+	Winners        []*imageutil.Individual
 }
 
 func (worker *WorkerDetails) Update() error {
@@ -102,34 +103,90 @@ func NewWorker() *WorkerDetails {
 }
 
 func (worker *WorkerDetails) Work() {
+	newDNA := make(chan string, 100)
+	go func() {
+		for {
+			dna := dna1.RndStr(50)
+			if !dna1.Valid(dna) {
+				continue
+			}
+			newDNA <- dna
+		}
+	}()
 	for generation := 0; ; generation++ {
 		log.Printf("Generation %d", generation+1)
 		worker.RLock()
 		lastGeneration := worker.LastGeneration
 		worker.RUnlock()
 
-		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+		const mutations = 5
+		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
 
-		children = append(children, lastGeneration...)
+		seen := map[string]struct{}{}
+
+		for _, p := range lastGeneration {
+			dna := p.DNA
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			children = append(children, p)
+		}
+
+		for _, p := range lastGeneration {
+			for i := 0; i <= mutations; i++ {
+				dna := p.DNA
+				for m := 0; m < i; m++ {
+					dna = dna1.Mutate(dna)
+				}
+				if _, ok := seen[dna]; ok {
+					continue
+				}
+				seen[dna] = struct{}{}
+				if !dna1.Valid(dna) {
+					continue
+				}
+				children = append(children, &imageutil.Individual{
+					DNA:             dna,
+					Parent:          []*imageutil.Individual{p},
+					FirstGeneration: generation,
+				})
+			}
+		}
 
 		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
 			p1 := lastGeneration[i%10]
 			p2 := lastGeneration[i/10]
+			dna := dna1.Breed(p1.DNA, p2.DNA)
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			if !dna1.Valid(dna) {
+				continue
+			}
 			children = append(children, &imageutil.Individual{
-				DNA: dna1.Breed(p1.DNA, p2.DNA),
+				DNA: dna,
 				Parent: []*imageutil.Individual{
 					p1, p2,
 				},
+				FirstGeneration: generation,
 			})
 		}
 
-		for {
-			children = append(children, &imageutil.Individual{
-				DNA: dna1.RndStr(50),
-			})
-			if len(children) > childrenCount {
-				break
+		for len(children) < childrenCount {
+			dna := <-newDNA
+			if _, ok := seen[dna]; ok {
+				continue
 			}
+			seen[dna] = struct{}{}
+			if !dna1.Valid(dna) {
+				continue
+			}
+			children = append(children, &imageutil.Individual{
+				DNA:             dna,
+				FirstGeneration: generation,
+			})
 		}
 
 		wg := sync.WaitGroup{}
@@ -148,6 +205,27 @@ func (worker *WorkerDetails) Work() {
 
 		worker.Lock()
 		lastGeneration = children[:10]
+		children = children[10:]
+		for i := range lastGeneration {
+			if len(children) == 0 {
+				break
+			}
+			child := lastGeneration[i]
+			if generation-child.FirstGeneration > 10 {
+				lastGeneration[i] = children[0]
+				worker.Winners = append(worker.Winners, child)
+				children = children[0:]
+			}
+		}
+		sort.Sort(sort.Reverse(&imageutil.Sorter{
+			Children: lastGeneration,
+		}))
+		sort.Sort(sort.Reverse(&imageutil.Sorter{
+			Children: worker.Winners,
+		}))
+		if len(worker.Winners) > 100 {
+			worker.Winners = worker.Winners[:100]
+		}
 		worker.LastGeneration = lastGeneration
 		worker.generation = generation
 		worker.Unlock()

@@ -49,6 +49,7 @@ type Expression interface {
 	String() string
 	Depth() int
 	Simplify() Expression
+	HasVar(vs string) bool
 }
 
 type Function struct {
@@ -87,6 +88,10 @@ func (v Function) Simplify() *Function {
 	return &v
 }
 
+func (v Function) HasVar(vs string) bool {
+	return v.Equals.HasVar(vs)
+}
+
 type Equals struct {
 	LHS Expression
 	RHS Expression
@@ -114,6 +119,10 @@ func (v Equals) Simplify() Expression {
 	return &v
 }
 
+func (v Equals) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
+}
+
 func removeBrackets(e Expression) Expression {
 	switch e := e.(type) {
 	case *Brackets:
@@ -124,6 +133,10 @@ func removeBrackets(e Expression) Expression {
 
 type Var struct {
 	Var string
+}
+
+func (v Var) HasVar(vs string) bool {
+	return v.Var == vs
 }
 
 func (v Var) Evaluate(state State) float64 {
@@ -155,6 +168,10 @@ type Const struct {
 	Value float64
 }
 
+func (c Const) HasVar(vs string) bool {
+	return false
+}
+
 func (c Const) Evaluate(state State) float64 {
 	return c.Value
 }
@@ -174,6 +191,10 @@ func (v Const) Depth() int {
 type Plus struct {
 	LHS Expression
 	RHS Expression
+}
+
+func (v Plus) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
 func (v Plus) Evaluate(state State) float64 {
@@ -203,6 +224,10 @@ type Subtract struct {
 	RHS Expression
 }
 
+func (v Subtract) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
+}
+
 func (v Subtract) Evaluate(state State) float64 {
 	return v.RHS.Evaluate(state) - v.LHS.Evaluate(state)
 }
@@ -228,6 +253,10 @@ func (v Subtract) Depth() int {
 type Multiply struct {
 	LHS Expression
 	RHS Expression
+}
+
+func (v Multiply) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
 func (v Multiply) Evaluate(state State) float64 {
@@ -257,6 +286,10 @@ type Divide struct {
 	RHS Expression
 }
 
+func (v Divide) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
+}
+
 func (v Divide) Evaluate(state State) float64 {
 	return v.RHS.Evaluate(state) / v.LHS.Evaluate(state)
 }
@@ -282,6 +315,10 @@ func (v Divide) Depth() int {
 type Power struct {
 	LHS Expression
 	RHS Expression
+}
+
+func (v Power) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
 func (v Power) Evaluate(state State) float64 {
@@ -311,6 +348,10 @@ type Modulus struct {
 	RHS Expression
 }
 
+func (v Modulus) HasVar(vs string) bool {
+	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
+}
+
 func (v Modulus) Evaluate(state State) float64 {
 	return math.Mod(v.LHS.Evaluate(state), v.RHS.Evaluate(state))
 }
@@ -335,6 +376,10 @@ func (v Modulus) Depth() int {
 
 type Negate struct {
 	Expr Expression
+}
+
+func (v Negate) HasVar(vs string) bool {
+	return v.Expr.HasVar(vs)
 }
 
 func (v Negate) Evaluate(state State) float64 {
@@ -369,6 +414,10 @@ type Brackets struct {
 	Expr Expression
 }
 
+func (v Brackets) HasVar(vs string) bool {
+	return v.Expr.HasVar(vs)
+}
+
 func (v Brackets) Evaluate(state State) float64 {
 	return v.Expr.Evaluate(state)
 }
@@ -399,6 +448,10 @@ type SingleFunction struct {
 	Expr Expression
 }
 
+func (v SingleFunction) HasVar(vs string) bool {
+	return v.Expr.HasVar(vs)
+}
+
 func (v SingleFunction) Evaluate(state State) float64 {
 	var r = v.Expr.Evaluate(state)
 	if f, ok := SingleFunctions[strings.ToUpper(v.Name)]; ok {
@@ -425,6 +478,10 @@ type DoubleFunction struct {
 	Expr1 Expression
 	Expr2 Expression
 	Infix bool
+}
+
+func (v DoubleFunction) HasVar(vs string) bool {
+	return v.Expr1.HasVar(vs) || v.Expr2.HasVar(vs)
 }
 
 func (v DoubleFunction) Evaluate(state State) float64 {

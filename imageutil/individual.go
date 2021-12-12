@@ -26,14 +26,15 @@ func (s *Sorter) Swap(i, j int) {
 }
 
 type Individual struct {
-	DNA    string
-	Parent []*Individual
-	Score  float64
-	Rf     *image_formula_find.Function
-	Bf     *image_formula_find.Function
-	Gf     *image_formula_find.Function
-	i      draw.Image
-	d      *drawer1.Drawer
+	DNA             string
+	Parent          []*Individual
+	Score           float64
+	Rf              *image_formula_find.Function
+	Bf              *image_formula_find.Function
+	Gf              *image_formula_find.Function
+	i               draw.Image
+	d               *drawer1.Drawer
+	FirstGeneration int
 }
 
 type Required interface {
@@ -55,10 +56,7 @@ func (b *BasicRequired) SourceImage() image.Image {
 }
 
 func (i *Individual) Calculate(required Required) {
-	rd, bd, gd := dna1.SplitString3(i.DNA)
-	i.Rf = dna1.ParseFunction(rd)
-	i.Bf = dna1.ParseFunction(bd)
-	i.Gf = dna1.ParseFunction(gd)
+	i.Rf, i.Bf, i.Gf = dna1.ParseDNA(i.DNA)
 	i.d = &drawer1.Drawer{
 		RedFormula:   i.Rf,
 		BlueFormula:  i.Bf,

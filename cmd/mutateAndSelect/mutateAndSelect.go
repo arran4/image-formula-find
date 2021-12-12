@@ -54,9 +54,24 @@ func main() {
 	csvw.Write(row)
 	for generation := 0; generation < generations; generation++ {
 		log.Printf("Generation %d", generation+1)
-		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+		const mutations = 5
+		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
 
 		children = append(children, lastGeneration...)
+
+		for _, p := range lastGeneration {
+			for i := 0; i < mutations; i++ {
+				mutate := p.DNA
+				for m := 0; m <= i; m++ {
+					mutate = dna1.Mutate(mutate)
+				}
+				children = append(children, &imageutil.Individual{
+					DNA:             mutate,
+					Parent:          []*imageutil.Individual{p},
+					FirstGeneration: generation,
+				})
+			}
+		}
 
 		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
 			p1 := lastGeneration[i%10]

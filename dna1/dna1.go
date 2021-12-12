@@ -317,3 +317,18 @@ func Breed(a string, b string) string {
 	}
 	return result
 }
+
+func ParseDNA(dna string) (*image_formula_find.Function, *image_formula_find.Function, *image_formula_find.Function) {
+	rd, bd, gd := SplitString3(dna)
+	rf := ParseFunction(rd)
+	bf := ParseFunction(bd)
+	gf := ParseFunction(gd)
+	return rf, bf, gf
+}
+
+func Valid(dna string) bool {
+	rf, bf, gf := ParseDNA(dna)
+	return rf.HasVar("X") && rf.HasVar("Y") &&
+		bf.HasVar("X") && bf.HasVar("Y") &&
+		gf.HasVar("X") && gf.HasVar("Y")
+}
