@@ -28,7 +28,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	worker := NewWorker()
 	go worker.Work()
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(640*2, 480*3)
 	ebiten.SetWindowTitle("Watch Generator")
 	if err := ebiten.RunGame(worker); err != nil {
 		log.Fatal(err)
@@ -59,12 +59,25 @@ func (worker *WorkerDetails) Draw(screen *ebiten.Image) {
 		worker.esrcimg = ebiten.NewImageFromImage(worker.srcimg)
 	}
 	screen.DrawImage(worker.esrcimg, op)
-	for _, ind := range worker.LastGeneration {
-		op.GeoM.Translate(float64(worker.srcimg.Bounds().Dx()+10), 0)
+	for i, ind := range worker.LastGeneration {
+		op := &ebiten.DrawImageOptions{}
+		tx := 0 //(worker.srcimg.Bounds().Dx()+10)
+		ty := (worker.srcimg.Bounds().Dy() + 10) * (i + 1)
+		op.GeoM.Translate(float64(tx), float64(ty))
 		i := ind.Image()
 		if i != nil {
 			screen.DrawImage(ebiten.NewImageFromImage(i), op)
 		}
+		tx += (worker.srcimg.Bounds().Dx() + 10)
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Score %f", ind.Score), tx, ty)
+		ty += 20
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("DNA %s", ind.DNA), tx, ty)
+		ty += 20
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Red   = %s", ind.Rf.String()), tx, ty)
+		ty += 20
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Green = %s", ind.Gf.String()), tx, ty)
+		ty += 20
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Blue  = %s", ind.Bf.String()), tx, ty)
 	}
 }
 

@@ -29,9 +29,9 @@ type Individual struct {
 	DNA    string
 	Parent []*Individual
 	Score  float64
-	rf     *image_formula_find.Function
-	bf     *image_formula_find.Function
-	gf     *image_formula_find.Function
+	Rf     *image_formula_find.Function
+	Bf     *image_formula_find.Function
+	Gf     *image_formula_find.Function
 	i      draw.Image
 	d      *drawer1.Drawer
 }
@@ -56,13 +56,13 @@ func (b *BasicRequired) SourceImage() image.Image {
 
 func (i *Individual) Calculate(required Required) {
 	rd, bd, gd := dna1.SplitString3(i.DNA)
-	i.rf = dna1.ParseFunction(rd)
-	i.bf = dna1.ParseFunction(bd)
-	i.gf = dna1.ParseFunction(gd)
+	i.Rf = dna1.ParseFunction(rd)
+	i.Bf = dna1.ParseFunction(bd)
+	i.Gf = dna1.ParseFunction(gd)
 	i.d = &drawer1.Drawer{
-		RedFormula:   i.rf,
-		BlueFormula:  i.bf,
-		GreenFormula: i.gf,
+		RedFormula:   i.Rf,
+		BlueFormula:  i.Bf,
+		GreenFormula: i.Gf,
 	}
 	i.i = image.NewRGBA(required.PlotSize().Bounds())
 	draw.Draw(i.i, required.PlotSize(), i.d, image.Pt(0, 0), draw.Src)
@@ -71,7 +71,7 @@ func (i *Individual) Calculate(required Required) {
 
 func (i *Individual) CsvRow() []string {
 	return []string{
-		i.DNA, i.rf.String(), i.bf.String(), i.gf.String(), fmt.Sprintf("%0.2f", i.Score),
+		i.DNA, i.Rf.String(), i.Bf.String(), i.Gf.String(), fmt.Sprintf("%0.2f", i.Score),
 	}
 }
 
