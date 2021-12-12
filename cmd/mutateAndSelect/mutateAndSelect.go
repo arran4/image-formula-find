@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/agnivade/levenshtein"
 	"image"
 	"image-formula-find/dna1"
 	"image-formula-find/imageutil"
@@ -11,6 +12,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"sort"
@@ -118,7 +120,7 @@ func main() {
 						Parent: []*imageutil.Individual{
 							p1, p2,
 						},
-						Lineage:         p1.Lineage + p2.Lineage,
+						Lineage:         dna,
 						FirstGeneration: generation,
 					})
 				}
@@ -159,14 +161,25 @@ func main() {
 		}))
 
 		lastGeneration = make([]*imageutil.Individual, 0, childrenCount)
-		lineages := map[string]int{}
 		for len(lastGeneration) < childrenCount && len(children) > 0 {
 			child := children[0]
 			children = children[1:]
-			if v, ok := lineages[child.Lineage]; ok && v > 3 {
+
+			minDistance := math.MaxInt
+			for _, lg := range lastGeneration {
+				m := levenshtein.ComputeDistance(lg.DNA, child.DNA)
+				if m < minDistance {
+					minDistance = m
+					if minDistance < 10 {
+						break
+					}
+				}
+			}
+
+			if minDistance < 10 {
 				continue
 			}
-			lineages[child.Lineage]++
+
 			lastGeneration = append(lastGeneration, child)
 		}
 		sort.Sort(sort.Reverse(&imageutil.Sorter{

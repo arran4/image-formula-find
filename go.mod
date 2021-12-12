@@ -2,7 +2,10 @@ module image-formula-find
 
 go 1.17
 
-require github.com/hajimehoshi/ebiten/v2 v2.2.3
+require (
+	github.com/agnivade/levenshtein v1.1.1
+	github.com/hajimehoshi/ebiten/v2 v2.2.3
+)
 
 require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20210727001814-0db043d8d5be // indirect
