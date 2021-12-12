@@ -22,7 +22,7 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	rand.Seed(time.Now().UnixNano())
 	const logGenerations = 10
-	const generations = 1000
+	const generations = 100
 	const childrenCount = 10
 
 	srcimg := LoadImage()
@@ -64,10 +64,8 @@ func main() {
 	}()
 	for generation := 0; generation < generations; generation++ {
 		log.Printf("Generation %d", generation+1)
-		const mutations = 5
+		const mutations = 8
 		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
-
-		children = append(children, lastGeneration...)
 
 		seen := map[string]struct{}{}
 
@@ -97,28 +95,34 @@ func main() {
 					DNA:             dna,
 					Parent:          []*imageutil.Individual{p},
 					FirstGeneration: generation,
+					Lineage:         p.DNA,
 				})
 			}
 		}
 
-		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
-			p1 := lastGeneration[i%len(lastGeneration)]
-			p2 := lastGeneration[i/len(lastGeneration)]
+		//for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
+		//	p1 := lastGeneration[i%len(lastGeneration)]
+		//	p2 := lastGeneration[i/len(lastGeneration)]
+		if len(lastGeneration) > 4 {
+			p1 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
+			p2 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
 			dna := dna1.Breed(p1.DNA, p2.DNA)
 			if _, ok := seen[dna]; ok {
 				continue
 			}
 			seen[dna] = struct{}{}
-			if !dna1.Valid(dna) {
-				continue
+			if dna1.Valid(dna) {
+				if dna != p1.DNA && dna != p2.DNA && p1.Lineage != p2.Lineage {
+					children = append(children, &imageutil.Individual{
+						DNA: dna,
+						Parent: []*imageutil.Individual{
+							p1, p2,
+						},
+						Lineage:         p1.Lineage + p2.Lineage,
+						FirstGeneration: generation,
+					})
+				}
 			}
-			children = append(children, &imageutil.Individual{
-				DNA: dna,
-				Parent: []*imageutil.Individual{
-					p1, p2,
-				},
-				FirstGeneration: generation,
-			})
 		}
 
 		for len(children) < childrenCount {
@@ -132,6 +136,7 @@ func main() {
 			}
 			children = append(children, &imageutil.Individual{
 				DNA:             dna,
+				Lineage:         dna,
 				FirstGeneration: generation,
 			})
 		}
@@ -159,15 +164,10 @@ func main() {
 			child := children[0]
 			children = children[1:]
 			ph := ""
-			for _, p := range child.Parent {
-				ph += p.DNA
+			if v, ok := lineages[child.Lineage]; ok && v > 3 {
+				continue
 			}
-			if len(ph) > 0 {
-				if v, ok := lineages[ph]; ok && v > 3 {
-					continue
-				}
-				lineages[ph]++
-			}
+			lineages[ph]++
 			lastGeneration = append(lastGeneration, child)
 		}
 		sort.Sort(sort.Reverse(&imageutil.Sorter{

@@ -27,6 +27,7 @@ func (s *Sorter) Swap(i, j int) {
 
 type Individual struct {
 	DNA             string
+	Lineage         string
 	Parent          []*Individual
 	Score           float64
 	Rf              *image_formula_find.Function
