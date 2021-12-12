@@ -102,8 +102,8 @@ func main() {
 		}
 
 		for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
-			p1 := lastGeneration[i%10]
-			p2 := lastGeneration[i/10]
+			p1 := lastGeneration[i%len(lastGeneration)]
+			p2 := lastGeneration[i/len(lastGeneration)]
 			dna := dna1.Breed(p1.DNA, p2.DNA)
 			if _, ok := seen[dna]; ok {
 				continue
@@ -153,17 +153,21 @@ func main() {
 			Children: children,
 		}))
 
-		lastGeneration = children[:10]
-		children = children[10:]
-		for i := range lastGeneration {
-			if len(children) == 0 {
-				break
+		lineages := map[string]int{}
+		for len(lastGeneration) < childrenCount && len(children) > 0 {
+			child := children[0]
+			children = children[1:]
+			ph := ""
+			for _, p := range child.Parent {
+				ph += p.DNA
 			}
-			child := lastGeneration[i]
-			if generation-child.FirstGeneration > 10 {
-				lastGeneration[i] = children[0]
-				children = children[0:]
+			if len(ph) > 0 {
+				if v, ok := lineages[ph]; ok && v > 3 {
+					continue
+				}
+				lineages[ph]++
 			}
+			lastGeneration = append(lastGeneration, child)
 		}
 		sort.Sort(sort.Reverse(&imageutil.Sorter{
 			Children: lastGeneration,
