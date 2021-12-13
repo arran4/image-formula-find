@@ -358,7 +358,7 @@ func GenerationProcess(worker Required, lastGeneration []*Individual, generation
 	for _, p := range lastGeneration {
 		for i := 0; i <= mutations; i++ {
 			dna := p.DNA
-			for m := 0; m < i; m++ {
+			for m := 0; m <= i; m++ {
 				dna = Mutate(dna)
 			}
 			if _, ok := seen[dna]; ok {

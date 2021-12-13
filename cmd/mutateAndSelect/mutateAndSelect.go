@@ -19,7 +19,7 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	rand.Seed(time.Now().UnixNano())
 	const logGenerations = 10
-	const generations = 100
+	const generations = 1000
 	const childrenCount = 10
 
 	srcimg := LoadImage()
@@ -90,7 +90,7 @@ func main() {
 }
 
 func LoadImage() image.Image {
-	fin, err := os.Open("in4.png")
+	fin, err := os.Open("in5.png")
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
