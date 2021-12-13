@@ -4,26 +4,18 @@ import (
 	"fmt"
 	"image"
 	"image-formula-find/dna1"
-	"image-formula-find/imageutil"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/agnivade/levenshtein"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-)
-
-const (
-	childrenCount = 10
 )
 
 func main() {
@@ -40,12 +32,12 @@ func main() {
 
 type WorkerDetails struct {
 	sync.RWMutex
-	LastGeneration []*imageutil.Individual
+	LastGeneration []*dna1.Individual
 	srcimg         image.Image
 	plotSize       image.Rectangle
 	generation     int
 	esrcimg        *ebiten.Image
-	Winners        []*imageutil.Individual
+	Winners        []*dna1.Individual
 }
 
 func (worker *WorkerDetails) Update() error {
@@ -122,124 +114,10 @@ func (worker *WorkerDetails) Work() {
 		lastGeneration := worker.LastGeneration
 		worker.RUnlock()
 
-		const mutations = 8
-		var children = make([]*imageutil.Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+		lastGeneration = dna1.GenerationProcess(worker, lastGeneration, generation, newDNA)
 
-		seen := map[string]struct{}{}
-
-		for _, p := range lastGeneration {
-			dna := p.DNA
-			if _, ok := seen[dna]; ok {
-				continue
-			}
-			seen[dna] = struct{}{}
-			children = append(children, p)
-		}
-
-		for _, p := range lastGeneration {
-			for i := 0; i <= mutations; i++ {
-				dna := p.DNA
-				for m := 0; m < i; m++ {
-					dna = dna1.Mutate(dna)
-				}
-				if _, ok := seen[dna]; ok {
-					continue
-				}
-				seen[dna] = struct{}{}
-				if !dna1.Valid(dna) {
-					continue
-				}
-				children = append(children, &imageutil.Individual{
-					DNA:             dna,
-					Parent:          []*imageutil.Individual{p},
-					FirstGeneration: generation,
-					Lineage:         p.DNA,
-				})
-			}
-		}
-
-		//for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
-		//	p1 := lastGeneration[i%len(lastGeneration)]
-		//	p2 := lastGeneration[i/len(lastGeneration)]
-		if len(lastGeneration) > 4 {
-			p1 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
-			p2 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
-			dna := dna1.Breed(p1.DNA, p2.DNA)
-			if _, ok := seen[dna]; ok {
-				continue
-			}
-			seen[dna] = struct{}{}
-			if dna1.Valid(dna) {
-				if dna != p1.DNA && dna != p2.DNA && p1.Lineage != p2.Lineage {
-					children = append(children, &imageutil.Individual{
-						DNA: dna,
-						Parent: []*imageutil.Individual{
-							p1, p2,
-						},
-						Lineage:         dna,
-						FirstGeneration: generation,
-					})
-				}
-			}
-		}
-
-		for len(children) < childrenCount {
-			dna := <-newDNA
-			if _, ok := seen[dna]; ok {
-				continue
-			}
-			seen[dna] = struct{}{}
-			if !dna1.Valid(dna) {
-				continue
-			}
-			children = append(children, &imageutil.Individual{
-				DNA:             dna,
-				Lineage:         dna,
-				FirstGeneration: generation,
-			})
-		}
-
-		wg := sync.WaitGroup{}
-		for fi := range children {
-			wg.Add(1)
-			go func(i int, child *imageutil.Individual) {
-				defer wg.Done()
-				child.Calculate(worker)
-			}(fi, children[fi])
-		}
-		wg.Wait()
-
-		sort.Sort((&imageutil.Sorter{
-			Children: children,
-		}))
-
-		lastGeneration = make([]*imageutil.Individual, 0, childrenCount)
-		for len(lastGeneration) < childrenCount && len(children) > 0 {
-			child := children[0]
-			children = children[1:]
-
-			minDistance := math.MaxInt
-			for _, lg := range lastGeneration {
-				m := levenshtein.ComputeDistance(lg.DNA, child.DNA)
-				if m < minDistance {
-					minDistance = m
-					if minDistance < 10 {
-						break
-					}
-				}
-			}
-
-			if minDistance < 10 {
-				continue
-			}
-
-			lastGeneration = append(lastGeneration, child)
-		}
-		sort.Sort((&imageutil.Sorter{
-			Children: lastGeneration,
-		}))
 		worker.Lock()
-		sort.Sort((&imageutil.Sorter{
+		sort.Sort((&dna1.Sorter{
 			Children: worker.Winners,
 		}))
 		if len(worker.Winners) > 100 {

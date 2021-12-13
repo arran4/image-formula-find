@@ -1,11 +1,11 @@
-package imageutil
+package dna1
 
 import (
 	"fmt"
 	"image"
 	"image-formula-find"
-	"image-formula-find/dna1"
 	"image-formula-find/drawer1"
+	"image-formula-find/imageutil"
 	"image/draw"
 )
 
@@ -57,7 +57,7 @@ func (b *BasicRequired) SourceImage() image.Image {
 }
 
 func (i *Individual) Calculate(required Required) {
-	i.Rf, i.Bf, i.Gf = dna1.ParseDNA(i.DNA)
+	i.Rf, i.Bf, i.Gf = ParseDNA(i.DNA)
 	i.d = &drawer1.Drawer{
 		RedFormula:   i.Rf,
 		BlueFormula:  i.Bf,
@@ -65,7 +65,7 @@ func (i *Individual) Calculate(required Required) {
 	}
 	i.i = image.NewRGBA(required.PlotSize().Bounds())
 	draw.Draw(i.i, required.PlotSize(), i.d, image.Pt(0, 0), draw.Src)
-	i.Score = CalculateDistance(required.SourceImage(), i.i)
+	i.Score = imageutil.CalculateDistance(required.SourceImage(), i.i)
 }
 
 func (i *Individual) CsvRow() []string {

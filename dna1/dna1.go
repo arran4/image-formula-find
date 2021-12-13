@@ -1,9 +1,12 @@
 package dna1
 
 import (
+	"github.com/agnivade/levenshtein"
 	"image-formula-find"
 	"math"
 	"math/rand"
+	"sort"
+	"sync"
 )
 
 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -331,4 +334,128 @@ func Valid(dna string) bool {
 	return rf.HasVar("X") && rf.HasVar("Y") &&
 		bf.HasVar("X") && bf.HasVar("Y") &&
 		gf.HasVar("X") && gf.HasVar("Y")
+}
+
+const (
+	childrenCount = 10
+)
+
+func GenerationProcess(worker Required, lastGeneration []*Individual, generation int, newDNA chan string) []*Individual {
+	const mutations = 8
+	var children = make([]*Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+
+	seen := map[string]struct{}{}
+
+	for _, p := range lastGeneration {
+		dna := p.DNA
+		if _, ok := seen[dna]; ok {
+			continue
+		}
+		seen[dna] = struct{}{}
+		children = append(children, p)
+	}
+
+	for _, p := range lastGeneration {
+		for i := 0; i <= mutations; i++ {
+			dna := p.DNA
+			for m := 0; m < i; m++ {
+				dna = Mutate(dna)
+			}
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			if !Valid(dna) {
+				continue
+			}
+			children = append(children, &Individual{
+				DNA:             dna,
+				Parent:          []*Individual{p},
+				FirstGeneration: generation,
+				Lineage:         p.DNA,
+			})
+		}
+	}
+
+	//for i := 0; i < len(lastGeneration)*len(lastGeneration); i++ {
+	//	p1 := lastGeneration[i%len(lastGeneration)]
+	//	p2 := lastGeneration[i/len(lastGeneration)]
+	if len(lastGeneration) > 4 {
+		p1 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
+		p2 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
+		dna := Breed(p1.DNA, p2.DNA)
+		if _, ok := seen[dna]; !ok {
+			seen[dna] = struct{}{}
+
+			if Valid(dna) {
+				if dna != p1.DNA && dna != p2.DNA && p1.Lineage != p2.Lineage {
+					children = append(children, &Individual{
+						DNA: dna,
+						Parent: []*Individual{
+							p1, p2,
+						},
+						Lineage:         dna,
+						FirstGeneration: generation,
+					})
+				}
+			}
+		}
+	}
+
+	for len(children) < childrenCount {
+		dna := <-newDNA
+		if _, ok := seen[dna]; ok {
+			continue
+		}
+		seen[dna] = struct{}{}
+		if !Valid(dna) {
+			continue
+		}
+		children = append(children, &Individual{
+			DNA:             dna,
+			Lineage:         dna,
+			FirstGeneration: generation,
+		})
+	}
+
+	wg := sync.WaitGroup{}
+	for fi := range children {
+		wg.Add(1)
+		go func(i int, child *Individual) {
+			defer wg.Done()
+			child.Calculate(worker)
+		}(fi, children[fi])
+	}
+	wg.Wait()
+
+	sort.Sort((&Sorter{
+		Children: children,
+	}))
+
+	lastGeneration = make([]*Individual, 0, childrenCount)
+	for len(lastGeneration) < childrenCount && len(children) > 0 {
+		child := children[0]
+		children = children[1:]
+
+		minDistance := math.MaxInt
+		for _, lg := range lastGeneration {
+			m := levenshtein.ComputeDistance(lg.DNA, child.DNA)
+			if m < minDistance {
+				minDistance = m
+				if minDistance < 10 {
+					break
+				}
+			}
+		}
+
+		if minDistance < 10 {
+			continue
+		}
+
+		lastGeneration = append(lastGeneration, child)
+	}
+	sort.Sort((&Sorter{
+		Children: lastGeneration,
+	}))
+	return lastGeneration
 }
