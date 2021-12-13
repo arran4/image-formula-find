@@ -252,7 +252,7 @@ func (worker *WorkerDetails) Work() {
 }
 
 func LoadImage() image.Image {
-	fin, err := os.Open("in3.jpg")
+	fin, err := os.Open("in4.png")
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
