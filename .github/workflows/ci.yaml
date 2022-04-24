@@ -15,6 +15,16 @@ jobs:
         with:
           go-version: '^1.13.1' # The Go version to download (if necessary) and use.
       - run: go version
+      - name: Cache-Go
+        uses: actions/cache@v1
+        with:
+          path: |
+            ~/go/pkg/mod              # Module download cache
+            ~/.cache/go-build         # Build cache (Linux)
+            ~/Library/Caches/go-build # Build cache (Mac)
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - run: go run ./cmd/mutateAndSelect
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2
