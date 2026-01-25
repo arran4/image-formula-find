@@ -1,7 +1,8 @@
 project_name: image-formula-find
 before:
-  - go get golang.org/x/tools/cmd/goyacc
-  - goyacc -o calc.go -v calc.output calc.y
+  hooks:
+    - go install golang.org/x/tools/cmd/goyacc@latest
+    - goyacc -o calc.go -v calc.output calc.y
 builds:
   -
     id: "draw1"
@@ -123,10 +124,15 @@ builds:
       - 6
       - 7
 archives:
-  -
-    format_overrides:
-      - goos: windows
-        format: zip
+  - format: tar.gz
+    on:
+      goos:
+        - linux
+        - darwin
+  - format: zip
+    on:
+      goos:
+        - windows
 checksum:
   name_template: 'checksums.txt'
 snapshot:

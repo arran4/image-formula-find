@@ -1,6 +1,6 @@
 module image-formula-find
 
-go 1.17
+go 1.23
 
 require (
 	github.com/agnivade/levenshtein v1.1.1
