@@ -26,9 +26,3 @@ jobs:
 
       - name: Generate GIF
         run: go run ./cmd/generateGif -input in5.png -output evolution.gif -generations 1000 -steps 10
-
-      - name: Upload GIF
-        uses: actions/upload-artifact@v3
-        with:
-          name: evolution-gif
-          path: evolution.gif
