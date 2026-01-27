@@ -3,3 +3,5 @@ out*.gif
 out*.png
 *.iml
 /out.csv
+/generateGif
+evolution.gif
