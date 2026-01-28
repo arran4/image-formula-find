@@ -47,11 +47,16 @@ func main() {
 		borderWidth   = 2
 	)
 
-	// Canvas size:
-	// Width = padding + imgWidth + padding + imgWidth + padding
-	// Height = padding + labelHeight + padding + imgHeight + padding + formulaHeight + padding
-	canvasWidth := padding*3 + imgWidth*2
-	canvasHeight := padding*5 + labelHeight + imgHeight + formulaHeight
+	// Vertical Layout:
+	// Top: Target
+	// Middle: Evolution
+	// Bottom: Formula
+
+	canvasWidth := padding*2 + imgWidth
+	if canvasWidth < 300 { canvasWidth = 300 } // Ensure width for text
+
+	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + Formula + Padding
+	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + formulaHeight + padding
 
 	// Using BasicRequired implementation from dna1
 	worker := &dna1.BasicRequired{
@@ -112,24 +117,24 @@ func main() {
 				draw.Draw(compositeImg, image.Rect(r.Max.X, r.Min.Y, r.Max.X+borderWidth, r.Max.Y), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
 			}
 
-			// Draw Labels
-			addLabel(compositeImg, padding, padding+labelHeight-5, "Evolution")
-			addLabel(compositeImg, padding*2+imgWidth, padding+labelHeight-5, "Target")
+			// Center X for images
+			imgX := (canvasWidth - imgWidth) / 2
 
-			// Define positions for images
-			evolvedRect := image.Rect(padding, padding*2+labelHeight, padding+imgWidth, padding*2+labelHeight+imgHeight)
-			targetRect := image.Rect(padding*2+imgWidth, padding*2+labelHeight, padding*2+imgWidth*2, padding*2+labelHeight+imgHeight)
-
-			// Draw Borders
-			drawBorder(evolvedRect, color.Black)
+			// Draw Target (Top)
+			addLabel(compositeImg, padding, padding+labelHeight-5, "Target")
+			targetRect := image.Rect(imgX, padding+labelHeight, imgX+imgWidth, padding+labelHeight+imgHeight)
 			drawBorder(targetRect, color.Black)
-
-			// Draw Images
-			draw.Draw(compositeImg, evolvedRect, evolvedImg, image.Pt(0, 0), draw.Src)
 			draw.Draw(compositeImg, targetRect, srcimg, image.Pt(0, 0), draw.Src)
 
+			// Draw Evolution (Middle)
+			evoY := padding + labelHeight + imgHeight + padding
+			addLabel(compositeImg, padding, evoY+labelHeight-5, "Evolution")
+			evolvedRect := image.Rect(imgX, evoY+labelHeight, imgX+imgWidth, evoY+labelHeight+imgHeight)
+			drawBorder(evolvedRect, color.Black)
+			draw.Draw(compositeImg, evolvedRect, evolvedImg, image.Pt(0, 0), draw.Src)
+
 			// Draw Formula
-			formulaY := padding*3 + labelHeight + imgHeight + 15
+			formulaY := evoY + labelHeight + imgHeight + padding + 15
 			addLabel(compositeImg, padding, formulaY, fmt.Sprintf("Gen: %d Score: %.2f", generation+1, best.Score))
 			addLabel(compositeImg, padding, formulaY+15, "R: "+truncateString(best.Rf.String(), 60))
 			addLabel(compositeImg, padding, formulaY+30, "G: "+truncateString(best.Gf.String(), 60))
