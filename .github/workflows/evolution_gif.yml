@@ -1,0 +1,28 @@
+name: Generate Evolution GIF
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  generate-gif:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y xorg-dev libgl1-mesa-dev
+
+      - name: Build
+        run: go build -v ./cmd/...
+
+      - name: Generate GIF
+        run: go run ./cmd/generateGif -input in5.png -output evolution.gif -generations 1000 -steps 10
