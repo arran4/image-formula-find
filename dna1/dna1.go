@@ -112,7 +112,7 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 			Var: "Y",
 		}
 
-	case chars[0], chars[len(chars)/2], chars[len(chars)-1]:
+	case chars[0], chars[16], chars[32], chars[48], chars[63]:
 		return ParseConst(arg, c)
 	default:
 		return MakeConst(arg, c)
@@ -125,7 +125,23 @@ func MakeConst(arg string, c uint8) (string, image_formula_find.Expression) {
 }
 
 func ParseConst(arg string, c uint8) (string, image_formula_find.Expression) {
-	m := math.Pow10(int(c >> 6))
+	var exponent int
+	switch c {
+	case chars[0]: // A
+		exponent = 0
+	case chars[16]: // Q
+		exponent = 1
+	case chars[32]: // g
+		exponent = 2
+	case chars[48]: // w
+		exponent = -1
+	case chars[63]: // /
+		exponent = -2
+	default:
+		exponent = 0
+	}
+
+	m := math.Pow10(exponent)
 	r := 0.0
 	for i := 0; i < 2; i++ {
 		if len(arg) == 0 {
@@ -133,11 +149,13 @@ func ParseConst(arg string, c uint8) (string, image_formula_find.Expression) {
 		}
 		v, ok := runeMapPos[rune(arg[0])]
 		if !ok {
+			arg = arg[1:]
 			continue
 		}
 		r = r*64 + float64(v)
+		arg = arg[1:]
 	}
-	return arg, &image_formula_find.Const{Value: r / m}
+	return arg, &image_formula_find.Const{Value: r * m}
 }
 
 func ParseExpressionAll(arg string) image_formula_find.Expression {

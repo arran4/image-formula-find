@@ -58,13 +58,16 @@ func (b *BasicRequired) SourceImage() image.Image {
 
 func (i *Individual) Calculate(required Required) {
 	i.Rf, i.Bf, i.Gf = ParseDNA(i.DNA)
+	rect := required.PlotSize()
 	i.d = &drawer1.Drawer{
 		RedFormula:   i.Rf,
 		BlueFormula:  i.Bf,
 		GreenFormula: i.Gf,
+		Width:        rect.Dx(),
+		Height:       rect.Dy(),
 	}
-	i.i = image.NewRGBA(required.PlotSize().Bounds())
-	draw.Draw(i.i, required.PlotSize(), i.d, image.Pt(0, 0), draw.Src)
+	i.i = image.NewRGBA(rect.Bounds())
+	draw.Draw(i.i, rect, i.d, image.Pt(0, 0), draw.Src)
 	i.Score = imageutil.CalculateDistance(required.SourceImage(), i.i)
 }
 
