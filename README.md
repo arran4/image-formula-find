@@ -56,3 +56,25 @@ Here is a time-lapse of the evolution process:
 ## Status
 
 The project is functional. It includes a parser for the custom formula language, a genetic algorithm implementation, and visualization tools.
+
+## DNA Language & Features
+
+The DNA string encodes formulas for Red, Green, and Blue channels.
+
+### Coordinate System
+Input coordinates (X, Y) are scaled to a view window of **[-10, 10]** regardless of the image resolution.
+- `X`: -10 (left) to 10 (right)
+- `Y`: -10 (top) to 10 (bottom)
+
+### Constant Generation
+The parser supports generating constants of varying magnitudes using specific trigger characters:
+
+| Character | Exponent | Multiplier | Example DNA | Result Value |
+| :--- | :--- | :--- | :--- | :--- |
+| `A` | $10^0$ | 1 | `ABA` | 64 |
+| `Q` | $10^1$ | 10 | `QBA` | 640 |
+| `g` | $10^2$ | 100 | `gBA` | 6400 |
+| `w` | $10^{-1}$ | 0.1 | `wBA` | 6.4 |
+| `/` | $10^{-2}$ | 0.01 | `/BA` | 0.64 |
+
+This allows the evolution to easily access both very small precision values and large scalars.

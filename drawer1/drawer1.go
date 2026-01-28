@@ -8,9 +8,10 @@ import (
 )
 
 type Drawer struct {
-	RedFormula   *image_formula_find.Function
-	BlueFormula  *image_formula_find.Function
-	GreenFormula *image_formula_find.Function
+	RedFormula    *image_formula_find.Function
+	BlueFormula   *image_formula_find.Function
+	GreenFormula  *image_formula_find.Function
+	Width, Height int
 }
 
 func (d *Drawer) Convert(c color.Color) color.Color {
@@ -31,17 +32,25 @@ func (d *Drawer) At(x, y int) color.Color {
 	var rr float64
 	var gr float64
 	var br float64
+
+	sx := float64(x)
+	sy := float64(y)
+	if d.Width > 0 && d.Height > 0 {
+		sx = (float64(x)/float64(d.Width))*20.0 - 10.0
+		sy = (float64(y)/float64(d.Height))*20.0 - 10.0
+	}
+
 	go func() {
 		defer wg.Done()
-		rr, _, _ = d.RedFormula.Evaluate(float64(x), float64(y), 0)
+		rr, _, _ = d.RedFormula.Evaluate(sx, sy, 0)
 	}()
 	go func() {
 		defer wg.Done()
-		br, _, _ = d.BlueFormula.Evaluate(float64(x), float64(y), 0)
+		br, _, _ = d.BlueFormula.Evaluate(sx, sy, 0)
 	}()
 	go func() {
 		defer wg.Done()
-		gr, _, _ = d.GreenFormula.Evaluate(float64(x), float64(y), 0)
+		gr, _, _ = d.GreenFormula.Evaluate(sx, sy, 0)
 	}()
 	wg.Wait()
 	return color.RGBA{

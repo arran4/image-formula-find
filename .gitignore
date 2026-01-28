@@ -4,3 +4,6 @@ out*.png
 *.iml
 /out.csv
 /generateGif
+/mutateAndSelect
+/watchMutateAndSelect
+/draw1
