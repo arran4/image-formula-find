@@ -43,10 +43,17 @@ func ParseFunction(arg string) *image_formula_find.Function {
 	expr := ParseChannel(arg)
 	return &image_formula_find.Function{
 		Equals: &image_formula_find.Equals{
-			LHS: &image_formula_find.Var{Var: "Y"}, // Dummy LHS, not really used in calculation usually? Wait, image-formula-find uses Equals.Evaluate which is RHS - LHS. So we want RHS only, LHS=0.
+			LHS: &image_formula_find.Var{Var: "Y"},
 			RHS: expr,
 		},
 	}
+}
+
+func isZero(expr image_formula_find.Expression) bool {
+	if c, ok := expr.(*image_formula_find.Const); ok {
+		return c.Value == 0
+	}
+	return false
 }
 
 // ParseChannel implements the fixed structure formula builder.
@@ -60,11 +67,6 @@ func ParseChannel(dna string) image_formula_find.Expression {
 	for k := 0; k < 6; k++ {
 		baseIdx := k * 5
 
-		// If we don't have enough dna to even start this block (need at least P_0 which is at baseIdx),
-		// we treat it as 0 contribution.
-		// Actually Resolve handles out of bounds by returning 0 (Const).
-		// But let's build the structure regardless, params will just be 0.
-
 		p0 := Resolve(baseIdx, dna)
 		p1 := Resolve(baseIdx+1, dna)
 		p2 := Resolve(baseIdx+2, dna)
@@ -73,41 +75,81 @@ func ParseChannel(dna string) image_formula_find.Expression {
 
 		// Term Structure:
 		// Part A: P_2 * P_1
-		partA := &image_formula_find.Multiply{
-			LHS: p2,
-			RHS: p1,
+		var partA image_formula_find.Expression
+		if isZero(p2) || isZero(p1) {
+			partA = &image_formula_find.Const{Value: 0}
+		} else {
+			partA = &image_formula_find.Multiply{
+				LHS: p2,
+				RHS: p1,
+			}
 		}
 
 		// Part B: X/Y * P_4^P_3
-		var variable image_formula_find.Expression
-		if k%2 == 0 {
-			variable = &image_formula_find.Var{Var: "X"}
+		var partB image_formula_find.Expression
+		if isZero(p4) {
+			partB = &image_formula_find.Const{Value: 0}
 		} else {
-			variable = &image_formula_find.Var{Var: "Y"}
+			var variable image_formula_find.Expression
+			if k%2 == 0 {
+				variable = &image_formula_find.Var{Var: "X"}
+			} else {
+				variable = &image_formula_find.Var{Var: "Y"}
+			}
+
+			// If P3 is 1 (default?), maybe simplify too?
+			// But for now just handle zero P4.
+			powerPart := &image_formula_find.Power{
+				LHS: p4,
+				RHS: p3,
+			}
+
+			partB = &image_formula_find.Multiply{
+				LHS: variable,
+				RHS: powerPart,
+			}
 		}
 
-		powerPart := &image_formula_find.Power{
-			LHS: p4,
-			RHS: p3,
+		// Build Term = PartB + PartA + P0
+		// We omit zero parts.
+
+		var term image_formula_find.Expression = p0
+		if isZero(p0) {
+			term = &image_formula_find.Const{Value: 0}
 		}
 
-		partB := &image_formula_find.Multiply{
-			LHS: variable,
-			RHS: powerPart,
+		if !isZero(partA) {
+			if isZero(term) {
+				term = partA
+			} else {
+				term = &image_formula_find.Plus{
+					LHS: partA,
+					RHS: term,
+				}
+			}
 		}
 
-		// Term = PartB + PartA + P_0
-		term := &image_formula_find.Plus{
-			LHS: &image_formula_find.Plus{
-				LHS: partB,
-				RHS: partA,
-			},
-			RHS: p0,
+		if !isZero(partB) {
+			if isZero(term) {
+				term = partB
+			} else {
+				term = &image_formula_find.Plus{
+					LHS: partB,
+					RHS: term,
+				}
+			}
 		}
 
-		totalExpr = &image_formula_find.Plus{
-			LHS: totalExpr,
-			RHS: term,
+		// Add Term to Total
+		if !isZero(term) {
+			if isZero(totalExpr) {
+				totalExpr = term
+			} else {
+				totalExpr = &image_formula_find.Plus{
+					LHS: totalExpr,
+					RHS: term,
+				}
+			}
 		}
 	}
 	return totalExpr

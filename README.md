@@ -39,13 +39,15 @@ The parameters $P_i$ are resolved using a layered approach with a period of 30.
     *   **Additive**: Characters mapped to numbers are added to the current expression (e.g., $P_{new} = P_{old} + Value$).
     *   **Empty**: Zero values are ignored, allowing for sparse modifications.
 
-This allows the complexity of the expression to grow with the length of the DNA string, as deeper layers add more operations and depth to the fixed parameters.
+This allows the complexity of the expression to grow with the length of the DNA string, as deeper layers add more operations and depth to the fixed parameters. Zero-value terms are algebraically simplified out during construction to keep formulas clean.
 
 **Examples of DNA3 Evolution:**
 
 ![Evolution DNA3 01](evolution-dna3_01.gif)
 
 ![Evolution DNA3 02](evolution-dna3_02.gif)
+
+*(The colored bars below the evolution image represent the DNA strings for the R, G, and B channels)*
 
 ## Binaries
 

@@ -45,19 +45,21 @@ func main() {
 		padding       = 10
 		labelHeight   = 20
 		formulaHeight = 150
+		dnaBarHeight  = 30
 		borderWidth   = 2
 	)
 
 	// Vertical Layout:
 	// Top: Target
 	// Middle: Evolution
+	// Below Middle: DNA Bar
 	// Bottom: Formula
 
 	canvasWidth := padding*2 + imgWidth
 	if canvasWidth < 400 { canvasWidth = 400 } // Ensure width for text
 
-	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + Formula + Padding
-	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + formulaHeight + padding
+	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + DNA Bar + Padding + Formula + Padding
+	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + dnaBarHeight + padding + formulaHeight + padding
 
 	// Using BasicRequired implementation from dna3
 	worker := &dna3.BasicRequired{
@@ -70,7 +72,8 @@ func main() {
 	newDNA := make(chan string, 100)
 	go func() {
 		for {
-			dna := dna3.RndStr(50)
+			// Increase initial random DNA length to 200
+			dna := dna3.RndStr(200)
 			if !dna3.Valid(dna) {
 				continue
 			}
@@ -134,8 +137,13 @@ func main() {
 			drawBorder(evolvedRect, color.Black)
 			draw.Draw(compositeImg, evolvedRect, evolvedImg, image.Pt(0, 0), draw.Src)
 
+			// Draw DNA Bar
+			dnaY := evoY + labelHeight + imgHeight + padding
+			dnaRect := image.Rect(padding, dnaY, canvasWidth-padding, dnaY+dnaBarHeight)
+			drawDNABar(compositeImg, dnaRect, best.DNA)
+
 			// Draw Formula
-			formulaY := evoY + labelHeight + imgHeight + padding + 15
+			formulaY := dnaY + dnaBarHeight + padding + 15
 			addLabel(compositeImg, padding, formulaY, fmt.Sprintf("Gen: %d Score: %.2f", generation+1, best.Score))
 
 			yOffset := formulaY + 15
@@ -207,4 +215,35 @@ func addLabel(img *image.RGBA, x, y int, label string) {
 		Dot:  point,
 	}
 	d.DrawString(label)
+}
+
+func drawDNABar(img *image.RGBA, r image.Rectangle, dna string) {
+	// Split DNA into R, G, B channels
+	rStr, gStr, bStr := dna3.SplitString3(dna)
+
+	drawChannelBar := func(rect image.Rectangle, s string, baseColor color.RGBA) {
+		if len(s) == 0 {
+			return
+		}
+		width := float64(rect.Dx()) / float64(len(s))
+		for i, char := range s {
+			x1 := rect.Min.X + int(float64(i)*width)
+			x2 := rect.Min.X + int(float64(i+1)*width)
+
+			// Map char to intensity or shade
+			// A-Z...
+			val := int(char) % 255
+
+			c := baseColor
+			// Vary intensity based on char value
+			c.A = uint8(100 + val%155) // Ensure some visibility
+
+			draw.Draw(img, image.Rect(x1, rect.Min.Y, x2, rect.Max.Y), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
+		}
+	}
+
+	h := r.Dy() / 3
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Min.Y+h), rStr, color.RGBA{255, 0, 0, 255})
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+h, r.Max.X, r.Min.Y+2*h), gStr, color.RGBA{0, 255, 0, 255})
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+2*h, r.Max.X, r.Max.Y), bStr, color.RGBA{0, 0, 255, 255})
 }
