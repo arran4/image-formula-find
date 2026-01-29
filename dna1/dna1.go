@@ -35,38 +35,43 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 	}
 	c := arg[0]
 	arg = arg[1:]
-	switch c {
-	case chars[1]:
+	i, ok := runeMapPos[rune(c)]
+	if !ok {
+		return MakeConst(arg, c)
+	}
+
+	switch i % 17 {
+	case 1:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Plus{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[2]:
+	case 2:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Subtract{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[3]:
+	case 3:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Multiply{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[4]:
+	case 4:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Divide{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[5]:
+	case 5:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Modulus{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[6]:
+	case 6:
 		var farg rune = 'A'
 		if len(arg) > 0 {
 			farg = rune(arg[0])
@@ -80,7 +85,7 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 			Expr2: rhs,
 			Infix: false,
 		}
-	case chars[7]:
+	case 7:
 		var farg rune = 'A'
 		if len(arg) > 0 {
 			farg = rune(arg[0])
@@ -92,28 +97,37 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 			Name: image_formula_find.FunctionNames[int(fi)%len(image_formula_find.FunctionNames)],
 			Expr: expr,
 		}
-	case chars[8]:
+	case 8:
 		arg, expr := ParseExpression(arg)
 		return arg, image_formula_find.Negate{
 			Expr: expr,
 		}
-	case chars[9]:
+	case 9:
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.Power{
 			LHS: lhs,
 			RHS: rhs,
 		}
-	case chars[10]:
+	case 10:
 		return arg, image_formula_find.Var{
 			Var: "X",
 		}
-	case chars[11]:
+	case 11:
 		return arg, image_formula_find.Var{
 			Var: "Y",
 		}
-
-	case chars[0], chars[16], chars[32], chars[48], chars[63]:
-		return ParseConst(arg, c)
+	case 0:
+		return ParseConstWithExponent(arg, 0)
+	case 12:
+		return ParseConstWithExponent(arg, 1)
+	case 13:
+		return ParseConstWithExponent(arg, 2)
+	case 14:
+		return ParseConstWithExponent(arg, -1)
+	case 15:
+		return ParseConstWithExponent(arg, -2)
+	case 16:
+		return MakeConst(arg, c)
 	default:
 		return MakeConst(arg, c)
 	}
@@ -124,6 +138,7 @@ func MakeConst(arg string, c uint8) (string, image_formula_find.Expression) {
 	return arg, &image_formula_find.Const{Value: float64(i)}
 }
 
+// Deprecated: Use ParseConstWithExponent
 func ParseConst(arg string, c uint8) (string, image_formula_find.Expression) {
 	var exponent int
 	switch c {
@@ -140,7 +155,10 @@ func ParseConst(arg string, c uint8) (string, image_formula_find.Expression) {
 	default:
 		exponent = 0
 	}
+	return ParseConstWithExponent(arg, exponent)
+}
 
+func ParseConstWithExponent(arg string, exponent int) (string, image_formula_find.Expression) {
 	m := math.Pow10(exponent)
 	r := 0.0
 	for i := 0; i < 2; i++ {

@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/arran4/golang-wordwrap"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -43,7 +44,7 @@ func main() {
 	const (
 		padding       = 10
 		labelHeight   = 20
-		formulaHeight = 60
+		formulaHeight = 150
 		borderWidth   = 2
 	)
 
@@ -53,7 +54,7 @@ func main() {
 	// Bottom: Formula
 
 	canvasWidth := padding*2 + imgWidth
-	if canvasWidth < 300 { canvasWidth = 300 } // Ensure width for text
+	if canvasWidth < 400 { canvasWidth = 400 } // Ensure width for text
 
 	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + Formula + Padding
 	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + formulaHeight + padding
@@ -136,9 +137,28 @@ func main() {
 			// Draw Formula
 			formulaY := evoY + labelHeight + imgHeight + padding + 15
 			addLabel(compositeImg, padding, formulaY, fmt.Sprintf("Gen: %d Score: %.2f", generation+1, best.Score))
-			addLabel(compositeImg, padding, formulaY+15, "R: "+truncateString(best.Rf.String(), 60))
-			addLabel(compositeImg, padding, formulaY+30, "G: "+truncateString(best.Gf.String(), 60))
-			addLabel(compositeImg, padding, formulaY+45, "B: "+truncateString(best.Bf.String(), 60))
+
+			yOffset := formulaY + 15
+			drawWrappedFormula := func(prefix, formula string) {
+				content := wordwrap.NewContent(prefix + formula)
+				wrapper := wordwrap.NewSimpleWrapper([]*wordwrap.Content{content}, basicfont.Face7x13)
+				lines, _, err := wrapper.TextToRect(image.Rect(0, 0, canvasWidth-2*padding, canvasHeight))
+				if err != nil {
+					log.Printf("Error wrapping text: %v", err)
+					return
+				}
+				for _, line := range lines {
+					if yOffset > canvasHeight-20 {
+						break
+					}
+					addLabel(compositeImg, padding, yOffset, line.TextValue())
+					yOffset += 15
+				}
+			}
+
+			drawWrappedFormula("R: ", best.Rf.String())
+			drawWrappedFormula("G: ", best.Gf.String())
+			drawWrappedFormula("B: ", best.Bf.String())
 
 			// Convert to Paletted for GIF
 			palettedImg := image.NewPaletted(compositeRect, palette.Plan9)
@@ -189,9 +209,3 @@ func addLabel(img *image.RGBA, x, y int, label string) {
 	d.DrawString(label)
 }
 
-func truncateString(s string, max int) string {
-	if len(s) > max {
-		return s[:max] + "..."
-	}
-	return s
-}
