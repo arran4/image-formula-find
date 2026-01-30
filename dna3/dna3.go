@@ -97,8 +97,6 @@ func ParseChannel(dna string) image_formula_find.Expression {
 				variable = &image_formula_find.Var{Var: "Y"}
 			}
 
-			// If P3 is 1 (default?), maybe simplify too?
-			// But for now just handle zero P4.
 			powerPart := &image_formula_find.Power{
 				LHS: p4,
 				RHS: p3,
@@ -109,9 +107,6 @@ func ParseChannel(dna string) image_formula_find.Expression {
 				RHS: powerPart,
 			}
 		}
-
-		// Build Term = PartB + PartA + P0
-		// We omit zero parts.
 
 		var term image_formula_find.Expression = p0
 		if isZero(p0) {
@@ -140,7 +135,6 @@ func ParseChannel(dna string) image_formula_find.Expression {
 			}
 		}
 
-		// Add Term to Total
 		if !isZero(term) {
 			if isZero(totalExpr) {
 				totalExpr = term
@@ -193,10 +187,14 @@ func Resolve(idx int, dna string) image_formula_find.Expression {
 			}
 		} else {
 			// Number -> Add
+			// Note: We use MapValue again here, or should we use a simpler addition?
+			// Using MapValue keeps consistency.
 			numVal := MapValue(c)
-			expr = &image_formula_find.Plus{
-				LHS: expr,
-				RHS: &image_formula_find.Const{Value: numVal},
+			if numVal != 0 {
+				expr = &image_formula_find.Plus{
+					LHS: expr,
+					RHS: &image_formula_find.Const{Value: numVal},
+				}
 			}
 		}
 		layer++
@@ -207,34 +205,60 @@ func Resolve(idx int, dna string) image_formula_find.Expression {
 
 func MapValue(c uint8) float64 {
 	i := runeMapPos[rune(c)]
-	// Map 0..63 to some range. dna1 used specific exponent logic.
-	// Here, let's map 'A' (0) to 0.
-	// Others map to value. Maybe centered? Or just raw?
-	// dna1: ParseConstWithExponent uses base 64 logic.
-	// Let's just return float64(i).
-	// Or maybe scale it?
-	// The user example: p_0 is constant.
-	// Let's use float64(i).
+	// 0 (A) is Empty/Zero
 	if i == 0 {
 		return 0
 	}
-	// Maybe we want negative numbers?
-	// Let's make 0..26 positive, 27..53 negative?
-	// Or just use the full range and let "Negate" op handle sign.
-	return float64(i)
+
+	// Range 1..53 (B..1)
+	// We want a mix of small integers, fractions, and negatives.
+	// Total available slots: 53.
+
+	if i <= 20 {
+		// Small integers: 1 to 20
+		return float64(i)
+	} else if i <= 30 {
+		// Fractions: 0.1 to 1.0 (steps of 0.1)
+		// i=21 -> 0.1, i=30 -> 1.0
+		return float64(i-20) / 10.0
+	} else if i <= 40 {
+		// Negatives: -1 to -10
+		// i=31 -> -1, i=40 -> -10
+		return -float64(i - 30)
+	} else {
+		// Larger/Special: 41..53
+		// i=41 -> 0.01
+		// i=42 -> 100
+		// i=43 -> pi?
+		// Let's just do some powers of 2 or 10
+		switch i {
+		case 41: return 0.01
+		case 42: return 0.001
+		case 43: return 0.5 // 1/2
+		case 44: return 0.25 // 1/4
+		case 45: return 100.0
+		case 46: return 1000.0
+		case 47: return math.Pi
+		case 48: return math.E
+		case 49: return -0.5
+		case 50: return -0.1
+		default: return float64(i) // Fallback for 51, 52, 53
+		}
+	}
 }
 
 func MapOp(v int) string {
 	switch v {
 	case 54: return "Sin"
 	case 55: return "Cos"
-	case 56: return "Tan"
+	case 56: return "Tan"  // Warning: Asymptotes
 	case 57: return "Atan"
 	case 58: return "Abs"
-	case 59: return "Exp"
-	case 60: return "Log"
-	case 61: return "Sqrt"
-	case 62: return "Negate" // Not in standard list? Check math.go
+	case 59: return "Exp" // Warning: Growth
+	case 60: return "Log" // Warning: Negative domain
+	case 61: return "Sqrt" // Warning: Negative domain
+	case 62: return "Negate"
+	case 63: return "Sin" // Extra slot?
 	default: return "Sin"
 	}
 }
