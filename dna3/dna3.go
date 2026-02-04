@@ -211,39 +211,17 @@ func MapValue(c uint8) float64 {
 	}
 
 	// Range 1..53 (B..1)
-	// We want a mix of small integers, fractions, and negatives.
-	// Total available slots: 53.
+	// Requested: "range from 0 to 500 by step by 25"
+	// Indices 1..21 map to positive 25, 50 ... 500
+	// Indices 22..42 map to negative -25, -50 ... -500
+	// Indices 43..53 -> Empty/Zero to reduce constants
 
-	if i <= 20 {
-		// Small integers: 1 to 20
-		return float64(i)
-	} else if i <= 30 {
-		// Fractions: 0.1 to 1.0 (steps of 0.1)
-		// i=21 -> 0.1, i=30 -> 1.0
-		return float64(i-20) / 10.0
-	} else if i <= 40 {
-		// Negatives: -1 to -10
-		// i=31 -> -1, i=40 -> -10
-		return -float64(i - 30)
+	if i <= 21 {
+		return float64(i) * 25.0
+	} else if i <= 42 {
+		return -float64(i-21) * 25.0
 	} else {
-		// Larger/Special: 41..53
-		// i=41 -> 0.01
-		// i=42 -> 100
-		// i=43 -> pi?
-		// Let's just do some powers of 2 or 10
-		switch i {
-		case 41: return 0.01
-		case 42: return 0.001
-		case 43: return 0.5 // 1/2
-		case 44: return 0.25 // 1/4
-		case 45: return 100.0
-		case 46: return 1000.0
-		case 47: return math.Pi
-		case 48: return math.E
-		case 49: return -0.5
-		case 50: return -0.1
-		default: return float64(i) // Fallback for 51, 52, 53
-		}
+		return 0
 	}
 }
 

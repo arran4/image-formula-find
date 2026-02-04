@@ -29,8 +29,8 @@ func main() {
 
 	flag.StringVar(&inputPath, "input", "in5.png", "Path to input image")
 	flag.StringVar(&outputPath, "output", "evolution-dna3_01.gif", "Path to output GIF")
-	flag.IntVar(&generations, "generations", 1000, "Number of generations")
-	flag.IntVar(&steps, "steps", 10, "Number of steps (frames in GIF)")
+	flag.IntVar(&generations, "generations", 500, "Number of generations")
+	flag.IntVar(&steps, "steps", 20, "Number of steps (frames in GIF)")
 	flag.Parse()
 
 	log.SetFlags(log.Flags() | log.Lshortfile)

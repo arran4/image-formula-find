@@ -23,39 +23,42 @@ func TestResolve(t *testing.T) {
 		},
 		{
 			name:     "Base Constant B",
-			dna:      "B",
+			dna:      "B", // B (index 1) -> 25
 			index:    0,
-			expected: "1",
+			expected: "25",
 		},
 		{
 			name:     "Additive Layer",
-			dna:      "B" + padding + "B", // Index 0: B(1), Index 30: B(1)
+			dna:      "B" + padding + "B", // Index 0: B(25), Index 30: B(25)
 			index:    0,
-			expected: "1 + 1",
+			expected: "25 + 25",
 		},
 		{
 			name:     "Op Layer Sin",
-			dna:      "B" + padding + "2", // Index 0: B(1), Index 30: 2(Sin)
+			dna:      "B" + padding + "2", // Index 0: B(25), Index 30: 2(Sin - 54) - Wait, '2' is index 54? No.
+			// chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+			// '2' is at index 54. MapOp(54) is Sin.
 			index:    0,
-			expected: "Sin(1)",
+			expected: "Sin(25)",
 		},
 		{
 			name:     "Op Layer Cos",
-			dna:      "B" + padding + "3", // Index 0: B(1), Index 30: 3(Cos)
+			dna:      "B" + padding + "3", // Index 0: B(25), Index 30: 3(Cos - 55)
+			// '3' is at index 55. MapOp(55) is Cos.
 			index:    0,
-			expected: "Cos(1)",
+			expected: "Cos(25)",
 		},
 		{
 			name:     "Multi Layer",
 			dna:      "B" + padding + "B" + padding + "2", // 0:B, 30:B, 60:2(Sin)
 			index:    0,
-			expected: "Sin(1 + 1)",
+			expected: "Sin(25 + 25)",
 		},
 		{
 			name:     "Empty Layer Ignored",
 			dna:      "B" + padding + "A" + padding + "B", // 0:B, 30:A, 60:B
 			index:    0,
-			expected: "1 + 1", // A is skipped
+			expected: "25 + 25", // A is skipped
 		},
 	}
 
@@ -76,19 +79,19 @@ func TestParseChannel(t *testing.T) {
 	// ParseChannel loops 6 times.
 	// If DNA is short, it uses 0.
 
-	dna := "BBBBB" // 5 params, all 1.
-	// Term 0 (even): X * 1^1 + 1*1 + 1
+	dna := "BBBBB" // 5 params, all 1 -> 25.
+	// Term 0 (even): X * 25^25 + 25*25 + 25
 	// Other terms: 0
-	// Total: 0 + (X * 1^1 + 1*1 + 1) + ...
+	// Total: 0 + (X * 25^25 + 25*25 + 25) + ...
 
 	expr := ParseChannel(dna)
 	s := expr.String()
 
 	// Just check if it contains expected parts
-	if !strings.Contains(s, "X * 1 ^ 1") {
-		t.Errorf("Expected X * 1 ^ 1, got %s", s)
+	if !strings.Contains(s, "X * 25 ^ 25") {
+		t.Errorf("Expected X * 25 ^ 25, got %s", s)
 	}
-	if !strings.Contains(s, "1 * 1") {
-		t.Errorf("Expected 1 * 1, got %s", s)
+	if !strings.Contains(s, "25 * 25") {
+		t.Errorf("Expected 25 * 25, got %s", s)
 	}
 }
