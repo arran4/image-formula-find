@@ -289,12 +289,7 @@ func ParseRPN(arg string) image_formula_find.Expression {
 		return &image_formula_find.Const{Value: 0}
 	}
 
-	// Sum up the stack to use all generated parts
-	var res image_formula_find.Expression = stack[0]
-	for i := 1; i < len(stack); i++ {
-		res = &image_formula_find.Plus{LHS: res, RHS: stack[i]}
-	}
-	return res
+	return stack[len(stack)-1]
 }
 
 func SplitString3(arg string) (string, string, string) {

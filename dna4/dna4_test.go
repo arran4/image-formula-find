@@ -30,12 +30,12 @@ func TestParseRPN(t *testing.T) {
 
 	// Constants
 	// D=3(0.1), E=4(-0.1)
-	// DNA: "DE" -> 0.1 -0.1 (Sum)
+	// DNA: "DE" -> 0.1 -0.1 (Top of stack is -0.1)
 	dna = "DE"
 	expr = ParseRPN(dna)
-	// Should be 0.1 + -0.1
-	if expr.String() != "0.1 + -0.1" {
-		t.Errorf("Expected 0.1 + -0.1, got %s", expr.String())
+	// Should be -0.1
+	if expr.String() != "-0.1" {
+		t.Errorf("Expected -0.1, got %s", expr.String())
 	}
 
 	// Complex: A B Q C R -> (X+Y)*T
