@@ -26,7 +26,7 @@ jobs:
         run: go build -o generateGifDna4 ./cmd/generateGifDna4
 
       - name: Run generation
-        run: ./generateGifDna4 -generations 100 -steps 10 -output evolution-dna4.gif
+        run: ./generateGifDna4 -generations 500 -steps 10 -output evolution-dna4.gif
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
