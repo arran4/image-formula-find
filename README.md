@@ -49,12 +49,25 @@ This allows the complexity of the expression to grow with the length of the DNA 
 
 *(The colored bars below the evolution image represent the DNA strings for the R, G, and B channels)*
 
+### DNA4 (Stack Machine / RPN)
+
+The `dna4` representation implements a **Stack Machine (Reverse Polish Notation)**.
+*   DNA characters are tokens pushed onto a stack or operations that consume stack items.
+*   This solves the complexity problem: simple formulas can easily become complex by appending more tokens.
+*   Supports variables (`X`, `Y`, `T`), constants, binary ops (`+`, `-`, `*`, `/`, `^`, `%`, `Min`, `Max`, `Atan2`, `Hypot`, `Dim`), and unary ops (`Sin`, `Cos`, `Tan`, `Abs`, `Log`, `Exp`, `Sqrt`, `Sinh`, `Cosh`, `Tanh`, `Ceil`, `Floor`, `Round`).
+*   Robust against invalid structures; "junk" DNA is simply summed up.
+
+**Examples of DNA4 Evolution:**
+
+![Evolution DNA4](evolution-dna4.gif)
+
 ## Binaries
 
 *   **`mutateAndSelect`**: The main evolutionary engine. It runs the genetic algorithm, logs progress to `out.csv`, and periodically saves the best result to `out.png`.
 *   **`watchMutateAndSelect`**: A graphical version that visualizes the evolution process in real-time using Ebiten.
 *   **`draw1`**: Utility to draw an image from a given formula.
 *   **`generateGifDna3`**: Utility to generate evolution GIFs using the DNA3 representation.
+*   **`generateGifDna4`**: Utility to generate evolution GIFs using the DNA4 representation.
 
 ## Usage
 
