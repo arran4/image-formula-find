@@ -221,12 +221,66 @@ func ParseRPN(arg string) image_formula_find.Expression {
 			} else if rhs != nil {
 				push(rhs)
 			}
+		case 35: // Sinh
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Sinh", Expr: e})
+			}
+		case 36: // Cosh
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Cosh", Expr: e})
+			}
+		case 37: // Tanh
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Tanh", Expr: e})
+			}
+		case 38: // Ceil
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Ceil", Expr: e})
+			}
+		case 39: // Floor
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Floor", Expr: e})
+			}
+		case 40: // Round
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.SingleFunction{Name: "Round", Expr: e})
+			}
+		case 41: // Atan2
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.DoubleFunction{Name: "Atan2", Expr1: lhs, Expr2: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 42: // Hypot
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.DoubleFunction{Name: "Hypot", Expr1: lhs, Expr2: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 43: // Dim
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.DoubleFunction{Name: "Dim", Expr1: lhs, Expr2: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
 
 		default:
 			// Map other chars to small random constants based on index
-			// Indices not used: 11-15, 35-63.
+			// Indices not used: 11-15, 44-63.
 			// Let's use them for more constants.
-			v := float64(idx-35) / 5.0
+			v := float64(idx-44) / 5.0
 			push(&image_formula_find.Const{Value: v})
 		}
 	}

@@ -59,6 +59,23 @@ func TestParseRPN(t *testing.T) {
 	if expr.String() != "X + Y * T" {
 		t.Errorf("Expected X + Y * T, got %s", expr.String())
 	}
+
+	// Test New Functions
+	// j=35 (Sinh), k=36 (Cosh)
+	// DNA: "Aj" -> Sinh(X)
+	dna = "Aj"
+	expr = ParseRPN(dna)
+	if expr.String() != "Sinh(X)" {
+		t.Errorf("Expected Sinh(X), got %s", expr.String())
+	}
+
+	// Atan2 (41): p(41)
+	// DNA: "ABp" -> Atan2(X, Y)
+	dna = "ABp"
+	expr = ParseRPN(dna)
+	if expr.String() != "Atan2(X, Y)" {
+		t.Errorf("Expected Atan2(X, Y), got %s", expr.String())
+	}
 }
 
 func TestGenerationProcess(t *testing.T) {
