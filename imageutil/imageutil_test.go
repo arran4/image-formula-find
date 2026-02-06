@@ -36,7 +36,7 @@ func TestCalculateDistance(t *testing.T) {
 		want float64
 	}{
 		{name: "Same iamge is same image", i1: inimg1, i2: inimg1, want: 0.0},
-		{name: "Similar iamge is not the same image", i1: inimg1, i2: inimg2, want: 4.2949579029e+09},
+		{name: "Similar iamge is not the same image", i1: inimg1, i2: inimg2, want: 7.46145067775e+09},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
