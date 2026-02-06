@@ -17,7 +17,11 @@ func main() {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fout.Close()
+	defer func() {
+		if err := fout.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	if err := png.Encode(fout, i); err != nil {
 		log.Panicf("Error: %v", err)
 	}

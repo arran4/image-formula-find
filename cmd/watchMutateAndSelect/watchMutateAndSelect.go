@@ -8,11 +8,9 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
-	"math/rand"
 	"os"
 	"sort"
 	"sync"
-	"time"
 
 	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -20,7 +18,6 @@ import (
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
-	rand.Seed(time.Now().UnixNano())
 	worker := NewWorker()
 	go worker.Work()
 	ebiten.SetWindowSize(640*2, 480*3)
@@ -45,8 +42,8 @@ func (worker *WorkerDetails) Update() error {
 }
 
 func (worker *WorkerDetails) Draw(screen *ebiten.Image) {
-	worker.RWMutex.RLock()
-	defer worker.RWMutex.RUnlock()
+	worker.RLock()
+	defer worker.RUnlock()
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("Generation %d", worker.generation))
 	op := &ebiten.DrawImageOptions{}
 	const offsetY = 20

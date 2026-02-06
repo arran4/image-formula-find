@@ -65,7 +65,6 @@ func main() {
 		I: srcimg,
 	}
 
-	const childrenCount = 10
 	var lastGeneration []*dna1.Individual
 	newDNA := make(chan string, 100)
 	go func() {
@@ -173,7 +172,11 @@ func main() {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fout.Close()
+	defer func() {
+		if err := fout.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 
 	g := &gif.GIF{
 		Image: frames,
@@ -190,7 +193,11 @@ func LoadImage(path string) image.Image {
 	if err != nil {
 		log.Panicf("Error opening image %s: %v", path, err)
 	}
-	defer fin.Close()
+	defer func() {
+		if err := fin.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	i, _, err := image.Decode(fin)
 	if err != nil {
 		log.Panicf("Error decoding image %s: %v", path, err)

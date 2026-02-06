@@ -108,7 +108,7 @@ func ParseChannel(dna string) image_formula_find.Expression {
 			}
 		}
 
-		var term image_formula_find.Expression = p0
+		term := p0
 		if isZero(p0) {
 			term = &image_formula_find.Const{Value: 0}
 		}

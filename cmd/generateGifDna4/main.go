@@ -69,7 +69,6 @@ func main() {
 		I: srcimg,
 	}
 
-	const childrenCount = 10
 	var lastGeneration []*dna4.Individual
 	newDNA := make(chan string, 100)
 	go func() {

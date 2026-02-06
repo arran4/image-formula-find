@@ -7,14 +7,11 @@ import (
 	"image/draw"
 	"image/png"
 	"log"
-	"math/rand"
 	"os"
-	"time"
 )
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
-	rand.Seed(time.Now().UnixNano())
 	i := image.NewRGBA(image.Rect(0, 0, 100, 100))
 	rf, bf, gf := dna1.SplitString3(dna1.RndStr(18))
 	d := &drawer1.Drawer{

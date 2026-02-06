@@ -10,14 +10,11 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"log"
-	"math/rand"
 	"os"
-	"time"
 )
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
-	rand.Seed(time.Now().UnixNano())
 	const logGenerations = 10
 	const generations = 1000
 	const childrenCount = 10
@@ -34,7 +31,11 @@ func main() {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fcsv.Close()
+	defer func() {
+		if err := fcsv.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	csvw := csv.NewWriter(fcsv)
 	defer csvw.Flush()
 	var row []string
@@ -48,7 +49,9 @@ func main() {
 			fmt.Sprintf("C%d Distance", i+1))
 	}
 	headerSize := len(row)
-	csvw.Write(row)
+	if err := csvw.Write(row); err != nil {
+		log.Panicf("Error writing csv: %v", err)
+	}
 	newDNA := make(chan string, 100)
 	go func() {
 		for {
@@ -74,7 +77,9 @@ func main() {
 				draw.Draw(destimg, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*(generation/(generations/logGenerations)))), child.Image(), image.Pt(0, 0), draw.Src)
 				row = append(row, child.CsvRow()...)
 			}
-			csvw.Write(row)
+			if err := csvw.Write(row); err != nil {
+				log.Panicf("Error writing csv: %v", err)
+			}
 		}
 
 	}
@@ -82,7 +87,11 @@ func main() {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fout.Close()
+	defer func() {
+		if err := fout.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	if err := png.Encode(fout, destimg); err != nil {
 		log.Panicf("Error: %v", err)
 	}
@@ -94,7 +103,11 @@ func LoadImage() image.Image {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fin.Close()
+	defer func() {
+		if err := fin.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	i, _, err := image.Decode(fin)
 	if err != nil {
 		log.Panicf("error: %v", err)
