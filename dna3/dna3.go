@@ -357,7 +357,15 @@ func Breed(a string, b string) string {
 	if len(b) < p {
 		p = len(b)
 	}
-	result := ""
+	var result strings.Builder
+	// Pre-allocate to avoid reallocations.
+	// We use the maximum length of a and b as a safe upper bound.
+	growLen := len(a)
+	if len(b) > growLen {
+		growLen = len(b)
+	}
+	result.Grow(growLen)
+
 	for i := 0; i < p; i++ {
 		var s string
 		switch rand.Int31n(2) {
@@ -368,9 +376,9 @@ func Breed(a string, b string) string {
 		}
 		st := (len(s) / p) * i
 		e := (len(s)/p)*(i+1) - 1
-		result += s[st:e]
+		result.WriteString(s[st:e])
 	}
-	return result
+	return result.String()
 }
 
 func Valid(dna string) bool {
