@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -22,11 +23,15 @@ func init() {
 }
 
 func RndStr(length int) string {
-	result := ""
-	for len(result) < length {
-		result += string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+	if length <= 0 {
+		return ""
 	}
-	return result
+	var sb strings.Builder
+	sb.Grow(length)
+	for i := 0; i < length; i++ {
+		sb.WriteByte(chars[rand.Int31n(int32(len(chars)))])
+	}
+	return sb.String()
 }
 
 func ParseExpression(arg string) (string, image_formula_find.Expression) {
