@@ -51,7 +51,7 @@ func main() {
 				BlueFormula:  bf,
 				GreenFormula: gf,
 			}
-			draw.Draw(img, plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*generation)), d, image.Pt(0, 0), draw.Src)
+			d.Render(img.SubImage(plotSize.Add(image.Pt(plotSize.Dx()*i, plotSize.Dy()*generation))).(draw.Image))
 		}
 		csvw.Write(row)
 
