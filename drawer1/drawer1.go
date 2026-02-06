@@ -37,6 +37,7 @@ func (d *Drawer) At(x, y int) color.Color {
 		sy = (float64(y)/float64(d.Height))*20.0 - 10.0
 	}
 
+	// Evaluate sequentially to avoid overhead of spawning goroutines per pixel.
 	rr, _, _ = d.RedFormula.Evaluate(sx, sy, 0)
 	br, _, _ = d.BlueFormula.Evaluate(sx, sy, 0)
 	gr, _, _ = d.GreenFormula.Evaluate(sx, sy, 0)
