@@ -13,6 +13,8 @@ import (
 	"log"
 	"os"
 
+	"math"
+
 	"github.com/arran4/golang-wordwrap"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -27,7 +29,7 @@ func main() {
 	var generations int
 	var steps int
 
-	flag.StringVar(&inputPath, "input", "in5.png", "Path to input image")
+	flag.StringVar(&inputPath, "input", "flag.png", "Path to input image")
 	flag.StringVar(&outputPath, "output", "evolution-dna4.gif", "Path to output GIF")
 	flag.IntVar(&generations, "generations", 1000, "Number of generations")
 	flag.IntVar(&steps, "steps", 10, "Number of steps (frames in GIF)")
@@ -45,19 +47,21 @@ func main() {
 		padding       = 10
 		labelHeight   = 20
 		formulaHeight = 150
+		dnaBarHeight  = 120 // Increased height for wrapping
 		borderWidth   = 2
 	)
 
 	// Vertical Layout:
 	// Top: Target
 	// Middle: Evolution
+	// Below Middle: DNA Bar
 	// Bottom: Formula
 
 	canvasWidth := padding*2 + imgWidth
 	if canvasWidth < 400 { canvasWidth = 400 } // Ensure width for text
 
-	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + Formula + Padding
-	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + formulaHeight + padding
+	// Height = Padding + Label + Target + Padding + Label + Evolution + Padding + DNA Bar + Padding + Formula + Padding
+	canvasHeight := padding + labelHeight + imgHeight + padding + labelHeight + imgHeight + padding + dnaBarHeight + padding + formulaHeight + padding
 
 	// Using BasicRequired implementation from dna4
 	worker := &dna4.BasicRequired{
@@ -134,8 +138,13 @@ func main() {
 			drawBorder(evolvedRect, color.Black)
 			draw.Draw(compositeImg, evolvedRect, evolvedImg, image.Pt(0, 0), draw.Src)
 
+			// Draw DNA Bar
+			dnaY := evoY + labelHeight + imgHeight + padding
+			dnaRect := image.Rect(padding, dnaY, canvasWidth-padding, dnaY+dnaBarHeight)
+			drawDNABar(compositeImg, dnaRect, best.DNA)
+
 			// Draw Formula
-			formulaY := evoY + labelHeight + imgHeight + padding + 15
+			formulaY := dnaY + dnaBarHeight + padding + 15
 			addLabel(compositeImg, padding, formulaY, fmt.Sprintf("Gen: %d Score: %.2f", generation+1, best.Score))
 
 			yOffset := formulaY + 15
@@ -207,4 +216,85 @@ func addLabel(img *image.RGBA, x, y int, label string) {
 		Dot:  point,
 	}
 	d.DrawString(label)
+}
+
+func drawDNABar(img *image.RGBA, r image.Rectangle, dna string) {
+	// Split DNA into R, G, B channels
+	rStr, gStr, bStr := dna4.SplitString3(dna)
+
+	drawChannelBar := func(rect image.Rectangle, s string, baseColor color.RGBA) {
+		if len(s) == 0 {
+			return
+		}
+
+		// Use a fixed block width for visibility
+		const blockWidth = 4
+		const rowHeight = 10
+
+		// Calculate how many blocks fit in a row
+		blocksPerRow := rect.Dx() / blockWidth
+		if blocksPerRow < 1 { blocksPerRow = 1 }
+
+		for i, char := range s {
+			// Calculate position with wrapping
+			row := i / blocksPerRow
+			col := i % blocksPerRow
+
+			x1 := rect.Min.X + col*blockWidth
+			y1 := rect.Min.Y + row*rowHeight
+			x2 := x1 + blockWidth
+			y2 := y1 + rowHeight
+
+			// Stop if we exceed the allotted rectangle height
+			if y2 > rect.Max.Y {
+				break
+			}
+
+			// Map char to color
+			// Use a distinct color for every 10 chars in the alphabet map?
+			// The user said: "coloured DNA with a step of 10 or something"
+			// and "colour should have no bearing on the DNA representation" which is contradictory.
+			// Interpreting "step of 10" as mapping characters to distinct colors in steps.
+
+			// Let's use a full color spectrum mapping based on char value
+			// A-Z, a-z, 0-9...
+
+			hue := (int(char) * 10) % 360
+			// Simple HSV to RGB conversion for Saturation=1, Value=1
+			c := hsvToRGB(float64(hue), 1.0, 1.0)
+
+			draw.Draw(img, image.Rect(x1, y1, x2, y2), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
+		}
+	}
+
+	h := r.Dy() / 3
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Min.Y+h), rStr, color.RGBA{0, 0, 0, 255})
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+h, r.Max.X, r.Min.Y+2*h), gStr, color.RGBA{0, 0, 0, 255})
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+2*h, r.Max.X, r.Max.Y), bStr, color.RGBA{0, 0, 0, 255})
+}
+
+func hsvToRGB(h, s, v float64) color.RGBA {
+	c := v * s
+	x := c * (1 - math.Abs(math.Mod(h/60.0, 2)-1))
+	m := v - c
+	var r, g, b float64
+	if h >= 0 && h < 60 {
+		r, g, b = c, x, 0
+	} else if h >= 60 && h < 120 {
+		r, g, b = x, c, 0
+	} else if h >= 120 && h < 180 {
+		r, g, b = 0, c, x
+	} else if h >= 180 && h < 240 {
+		r, g, b = 0, x, c
+	} else if h >= 240 && h < 300 {
+		r, g, b = x, 0, c
+	} else {
+		r, g, b = c, 0, x
+	}
+	return color.RGBA{
+		R: uint8((r + m) * 255),
+		G: uint8((g + m) * 255),
+		B: uint8((b + m) * 255),
+		A: 255,
+	}
 }

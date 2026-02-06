@@ -98,10 +98,16 @@ type Equals struct {
 }
 
 func (v Equals) Evaluate(state State) float64 {
+	if v.LHS == nil {
+		return v.RHS.Evaluate(state)
+	}
 	return v.RHS.Evaluate(state) - v.LHS.Evaluate(state)
 }
 
 func (v Equals) Depth() int {
+	if v.LHS == nil {
+		return v.RHS.Depth()
+	}
 	l, r := v.LHS.Depth(), v.RHS.Depth()
 	if l > r {
 		return l + 1
@@ -110,16 +116,24 @@ func (v Equals) Depth() int {
 }
 
 func (v Equals) String() string {
+	if v.LHS == nil {
+		return v.RHS.String()
+	}
 	return fmt.Sprintf("%s = %s", v.LHS.String(), v.RHS.String())
 }
 
 func (v Equals) Simplify() Expression {
 	v.RHS = removeBrackets(v.RHS.Simplify())
-	v.LHS = removeBrackets(v.LHS.Simplify())
+	if v.LHS != nil {
+		v.LHS = removeBrackets(v.LHS.Simplify())
+	}
 	return &v
 }
 
 func (v Equals) HasVar(vs string) bool {
+	if v.LHS == nil {
+		return v.RHS.HasVar(vs)
+	}
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
