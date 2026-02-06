@@ -24,15 +24,16 @@ func init() {
 }
 
 func RndStr(length int) string {
-	result := ""
-	for len(result) < length {
-		n, err := crand.Int(crand.Reader, big.NewInt(int64(len(chars))))
+	result := make([]byte, length)
+	max := big.NewInt(int64(len(chars)))
+	for i := range result {
+		n, err := crand.Int(crand.Reader, max)
 		if err != nil {
 			panic(err)
 		}
-		result += string([]byte{chars[n.Int64()]})
+		result[i] = chars[n.Int64()]
 	}
-	return result
+	return string(result)
 }
 
 func ParseExpression(arg string) (string, image_formula_find.Expression) {
