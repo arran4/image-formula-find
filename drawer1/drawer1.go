@@ -4,7 +4,6 @@ import (
 	"image"
 	image_formula_find "image-formula-find"
 	"image/color"
-	"sync"
 )
 
 type Drawer struct {
@@ -27,8 +26,6 @@ func (d *Drawer) Bounds() image.Rectangle {
 }
 
 func (d *Drawer) At(x, y int) color.Color {
-	wg := sync.WaitGroup{}
-	wg.Add(3)
 	var rr float64
 	var gr float64
 	var br float64
@@ -40,19 +37,9 @@ func (d *Drawer) At(x, y int) color.Color {
 		sy = (float64(y)/float64(d.Height))*20.0 - 10.0
 	}
 
-	go func() {
-		defer wg.Done()
-		rr, _, _ = d.RedFormula.Evaluate(sx, sy, 0)
-	}()
-	go func() {
-		defer wg.Done()
-		br, _, _ = d.BlueFormula.Evaluate(sx, sy, 0)
-	}()
-	go func() {
-		defer wg.Done()
-		gr, _, _ = d.GreenFormula.Evaluate(sx, sy, 0)
-	}()
-	wg.Wait()
+	rr, _, _ = d.RedFormula.Evaluate(sx, sy, 0)
+	br, _, _ = d.BlueFormula.Evaluate(sx, sy, 0)
+	gr, _, _ = d.GreenFormula.Evaluate(sx, sy, 0)
 	return color.RGBA{
 		R: uint8(rr),
 		G: uint8(gr),
