@@ -348,7 +348,12 @@ func Breed(a string, b string) string {
 	if len(b) < p {
 		p = len(b)
 	}
-	result := ""
+	var builder strings.Builder
+	if len(a) > len(b) {
+		builder.Grow(len(a))
+	} else {
+		builder.Grow(len(b))
+	}
 	for i := 0; i < p; i++ {
 		var s string
 		switch rand.Int31n(2) {
@@ -359,9 +364,9 @@ func Breed(a string, b string) string {
 		}
 		st := (len(s) / p) * i
 		e := (len(s)/p)*(i+1) - 1
-		result += s[st:e]
+		builder.WriteString(s[st:e])
 	}
-	return result
+	return builder.String()
 }
 
 func ParseDNA(dna string) (*image_formula_find.Function, *image_formula_find.Function, *image_formula_find.Function) {
