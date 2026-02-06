@@ -23,11 +23,11 @@ func init() {
 }
 
 func RndStr(length int) string {
-	result := ""
-	for len(result) < length {
-		result += string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = chars[rand.Int31n(int32(len(chars)))]
 	}
-	return result
+	return string(result)
 }
 
 // ParseDNA splits the DNA into 3 channels (R, G, B) and parses each using the Stack Machine (RPN).
