@@ -68,11 +68,6 @@ func (v Function) Evaluate(X, Y float64, T int) (weight float64, TUsed bool, err
 	if v.Equals == nil {
 		return 0, false, errors.New("no such formula")
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("Recovered in f", r)
-		}
-	}()
 	weight = v.Equals.Evaluate(state)
 	TUsed = state.AccessedT
 	return
