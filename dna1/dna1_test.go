@@ -209,3 +209,23 @@ func TestPositionMutate(t *testing.T) {
 //	switch rf.Equals.LHS.(type) {
 //	}
 //}
+
+func TestRndStr(t *testing.T) {
+	length := 50
+	s := RndStr(length)
+	if len(s) != length {
+		t.Errorf("RndStr(50) length = %d; want %d", len(s), length)
+	}
+	for _, c := range s {
+		found := false
+		for _, v := range chars {
+			if c == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("RndStr(50) contains invalid char: %c", c)
+		}
+	}
+}

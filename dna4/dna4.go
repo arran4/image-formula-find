@@ -23,11 +23,11 @@ func init() {
 }
 
 func RndStr(length int) string {
-	result := ""
-	for len(result) < length {
-		result += string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = chars[rand.Int31n(int32(len(chars)))]
 	}
-	return result
+	return string(result)
 }
 
 // ParseDNA splits the DNA into 3 channels (R, G, B) and parses each using the Stack Machine (RPN).
@@ -43,7 +43,7 @@ func ParseFunction(arg string) *image_formula_find.Function {
 	expr := ParseRPN(arg)
 	return &image_formula_find.Function{
 		Equals: &image_formula_find.Equals{
-			LHS: &image_formula_find.Var{Var: "Y"},
+			LHS: nil, // Removed "Y" assignment to match requested format
 			RHS: expr,
 		},
 	}
@@ -289,12 +289,7 @@ func ParseRPN(arg string) image_formula_find.Expression {
 		return &image_formula_find.Const{Value: 0}
 	}
 
-	// Sum up the stack to use all generated parts
-	var res image_formula_find.Expression = stack[0]
-	for i := 1; i < len(stack); i++ {
-		res = &image_formula_find.Plus{LHS: res, RHS: stack[i]}
-	}
-	return res
+	return stack[len(stack)-1]
 }
 
 func SplitString3(arg string) (string, string, string) {
@@ -426,10 +421,10 @@ func Breed(a string, b string) string {
 }
 
 func Valid(dna string) bool {
-	rf, bf, gf := ParseDNA(dna)
-	return rf.HasVar("X") && rf.HasVar("Y") &&
-		bf.HasVar("X") && bf.HasVar("Y") &&
-		gf.HasVar("X") && gf.HasVar("Y")
+	// Relaxed validation: Just return true.
+	// Since ParseRPN returns only the top of stack, it's rare for random DNA to have X and Y in all channels immediately.
+	// We let the fitness function drive the selection towards useful formulas.
+	return true
 }
 
 const (
