@@ -1,47 +1,8 @@
 package dna1
 
 import (
-	"math/rand"
 	"testing"
 )
-
-// breedOriginal is the original implementation of Breed for benchmarking comparison.
-func breedOriginal(a string, b string) string {
-	p := 10
-	if len(a) < p {
-		p = len(a)
-	}
-	if len(b) < p {
-		p = len(b)
-	}
-	result := ""
-	for i := 0; i < p; i++ {
-		var s string
-		switch rand.Int31n(2) {
-		case 0:
-			s = a
-		case 1:
-			s = b
-		}
-		st := (len(s) / p) * i
-		e := (len(s)/p)*(i+1) - 1
-		result += s[st:e]
-	}
-	return result
-}
-
-func BenchmarkBreedOriginal(b *testing.B) {
-	// Setup inputs
-	s1 := RndStr(100)
-	s2 := RndStr(100)
-
-	// Reset timer to ignore setup time
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		breedOriginal(s1, s2)
-	}
-}
 
 func BenchmarkBreed(b *testing.B) {
 	// Setup inputs
