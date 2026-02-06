@@ -27,7 +27,7 @@ func main() {
 	var generations int
 	var steps int
 
-	flag.StringVar(&inputPath, "input", "in.png", "Path to input image")
+	flag.StringVar(&inputPath, "input", "flag.png", "Path to input image")
 	flag.StringVar(&outputPath, "output", "evolution-dna4.gif", "Path to output GIF")
 	flag.IntVar(&generations, "generations", 1000, "Number of generations")
 	flag.IntVar(&steps, "steps", 10, "Number of steps (frames in GIF)")
@@ -45,7 +45,7 @@ func main() {
 		padding       = 10
 		labelHeight   = 20
 		formulaHeight = 150
-		dnaBarHeight  = 30
+		dnaBarHeight  = 120 // Increased height for wrapping
 		borderWidth   = 2
 	)
 
@@ -224,20 +224,39 @@ func drawDNABar(img *image.RGBA, r image.Rectangle, dna string) {
 		if len(s) == 0 {
 			return
 		}
-		width := float64(rect.Dx()) / float64(len(s))
-		for i, char := range s {
-			x1 := rect.Min.X + int(float64(i)*width)
-			x2 := rect.Min.X + int(float64(i+1)*width)
 
-			// Map char to intensity or shade
-			// A-Z...
-			val := int(char) % 255
+		// Use a fixed block width for visibility
+		const blockWidth = 4
+		const rowHeight = 10
+
+		// Calculate how many blocks fit in a row
+		blocksPerRow := rect.Dx() / blockWidth
+		if blocksPerRow < 1 { blocksPerRow = 1 }
+
+		for i, char := range s {
+			// Calculate position with wrapping
+			row := i / blocksPerRow
+			col := i % blocksPerRow
+
+			x1 := rect.Min.X + col*blockWidth
+			y1 := rect.Min.Y + row*rowHeight
+			x2 := x1 + blockWidth
+			y2 := y1 + rowHeight
+
+			// Stop if we exceed the allotted rectangle height
+			if y2 > rect.Max.Y {
+				break
+			}
+
+			// Map char to intensity or shade with high step distance
+			// Using modulo with a prime number or large step to distinguish similar chars
+			val := (int(char) * 50) % 255
 
 			c := baseColor
 			// Vary intensity based on char value
 			c.A = uint8(100 + val%155) // Ensure some visibility
 
-			draw.Draw(img, image.Rect(x1, rect.Min.Y, x2, rect.Max.Y), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
+			draw.Draw(img, image.Rect(x1, y1, x2, y2), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
 		}
 	}
 
