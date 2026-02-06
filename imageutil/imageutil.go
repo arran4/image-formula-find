@@ -17,7 +17,7 @@ func CalculateDistance(i1 image.Image, i2 image.Image) float64 {
 		ymax = i2.Bounds().Dy()
 	}
 	for x := 0; x < xmax; x++ {
-		for y := 0; y < xmax; y++ {
+		for y := 0; y < ymax; y++ {
 			c1r, c1b, c1g, _ := i1.At(x, y).RGBA()
 			c2r, c2b, c2g, _ := i2.At(x, y).RGBA()
 			r += (math.Abs(float64(c1r-c2r))/255.0 +
