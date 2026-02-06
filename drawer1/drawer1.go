@@ -5,6 +5,7 @@ import (
 	image_formula_find "image-formula-find"
 	"image/color"
 	"image/draw"
+	"log"
 	"runtime"
 	"sync"
 )
@@ -28,7 +29,13 @@ func (d *Drawer) Bounds() image.Rectangle {
 	return image.Rectangle{image.Point{-1e9, -1e9}, image.Point{1e9, 1e9}}
 }
 
-func (d *Drawer) At(x, y int) color.Color {
+func (d *Drawer) At(x, y int) (c color.Color) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered in At:", r)
+			c = color.RGBA{0, 0, 0, 255}
+		}
+	}()
 	sx := float64(x)
 	sy := float64(y)
 	if d.Width > 0 && d.Height > 0 {
@@ -82,6 +89,11 @@ func (d *Drawer) Render(dst draw.Image) {
 
 		go func(y0, y1 int) {
 			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					log.Println("Recovered in Render worker:", r)
+				}
+			}()
 			for y := y0; y < y1; y++ {
 				// Calculate sy (scaled Y)
 				sy := float64(y)
