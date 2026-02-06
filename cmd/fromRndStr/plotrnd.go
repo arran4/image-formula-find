@@ -4,7 +4,6 @@ import (
 	"image"
 	"image-formula-find/dna1"
 	"image-formula-find/drawer1"
-	"image/draw"
 	"image/png"
 	"log"
 	"math/rand"
@@ -22,7 +21,7 @@ func main() {
 		BlueFormula:  dna1.ParseFunction(bf),
 		GreenFormula: dna1.ParseFunction(gf),
 	}
-	draw.Draw(i, i.Rect, d, image.Pt(0, 0), draw.Src)
+	d.Render(i)
 	log.Printf("Red: %s", d.RedFormula.String())
 	log.Printf("Blue: %s", d.BlueFormula.String())
 	log.Printf("Green: %s", d.GreenFormula.String())

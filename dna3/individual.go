@@ -67,7 +67,7 @@ func (i *Individual) Calculate(required Required) {
 		Height:       rect.Dy(),
 	}
 	i.i = image.NewRGBA(rect.Bounds())
-	draw.Draw(i.i, rect, i.d, image.Pt(0, 0), draw.Src)
+	i.d.Render(i.i)
 	i.Score = imageutil.CalculateDistance(required.SourceImage(), i.i)
 }
 

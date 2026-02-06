@@ -4,7 +4,6 @@ import (
 	"image"
 	image_formula_find "image-formula-find"
 	"image-formula-find/drawer1"
-	"image/draw"
 	"image/png"
 	"log"
 	"os"
@@ -18,7 +17,7 @@ func main() {
 		BlueFormula:  image_formula_find.ParseFunction("x = 2 * y + 3"),
 		GreenFormula: image_formula_find.ParseFunction("x = 4 * y + 5"),
 	}
-	draw.Draw(i, i.Rect, d, image.Pt(0, 0), draw.Src)
+	d.Render(i)
 	log.Printf("Red: %s", d.RedFormula.String())
 	log.Printf("Blue: %s", d.BlueFormula.String())
 	log.Printf("Green: %s", d.GreenFormula.String())
