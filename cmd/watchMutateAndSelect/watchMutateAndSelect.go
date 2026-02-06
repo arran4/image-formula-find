@@ -131,7 +131,11 @@ func LoadImage() image.Image {
 	if err != nil {
 		log.Panicf("Error: %v", err)
 	}
-	defer fin.Close()
+	defer func() {
+		if err := fin.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 	i, _, err := image.Decode(fin)
 	if err != nil {
 		log.Panicf("error: %v", err)
