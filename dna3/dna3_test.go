@@ -95,3 +95,64 @@ func TestParseChannel(t *testing.T) {
 		t.Errorf("Expected 25 * 25, got %s", s)
 	}
 }
+
+func TestBreedProperties(t *testing.T) {
+	// Case 1: Same length
+	s1 := RndStr(100)
+	s2 := RndStr(100)
+	verifyBreed(t, s1, s2)
+
+	// Case 2: Different length
+	s3 := RndStr(100)
+	s4 := RndStr(200)
+	verifyBreed(t, s3, s4)
+}
+
+func verifyBreed(t *testing.T, a, b string) {
+	result := Breed(a, b)
+
+	p := 10
+	if len(a) < p {
+		p = len(a)
+	}
+	if len(b) < p {
+		p = len(b)
+	}
+
+	currentPos := 0
+	for i := 0; i < p; i++ {
+		// Calculate potential segments from a
+		stA := (len(a) / p) * i
+		eA := (len(a)/p)*(i+1) - 1
+		segA := a[stA:eA]
+
+		// Calculate potential segments from b
+		stB := (len(b) / p) * i
+		eB := (len(b)/p)*(i+1) - 1
+		segB := b[stB:eB]
+
+		// Check what we have in result at currentPos
+		matchA := strings.HasPrefix(result[currentPos:], segA)
+		matchB := strings.HasPrefix(result[currentPos:], segB)
+
+		if !matchA && !matchB {
+			t.Fatalf("Segment %d mismatch. Expected \n%q OR \n%q, \ngot start of \n%q", i, segA, segB, result[currentPos:])
+		}
+
+		if matchA && matchB && segA != segB {
+			if len(segA) > len(segB) {
+				currentPos += len(segA)
+			} else {
+				currentPos += len(segB)
+			}
+		} else if matchA {
+			currentPos += len(segA)
+		} else {
+			currentPos += len(segB)
+		}
+	}
+
+	if currentPos != len(result) {
+		t.Errorf("Result length mismatch. Consumed %d, total %d", currentPos, len(result))
+	}
+}

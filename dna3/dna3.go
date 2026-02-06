@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/agnivade/levenshtein"
@@ -355,7 +356,7 @@ func Breed(a string, b string) string {
 	if len(b) < p {
 		p = len(b)
 	}
-	result := ""
+	var result strings.Builder
 	for i := 0; i < p; i++ {
 		var s string
 		switch rand.Int31n(2) {
@@ -366,9 +367,9 @@ func Breed(a string, b string) string {
 		}
 		st := (len(s) / p) * i
 		e := (len(s)/p)*(i+1) - 1
-		result += s[st:e]
+		result.WriteString(s[st:e])
 	}
-	return result
+	return result.String()
 }
 
 func Valid(dna string) bool {
