@@ -357,6 +357,14 @@ func Breed(a string, b string) string {
 		p = len(b)
 	}
 	var result strings.Builder
+	// Pre-allocate to avoid reallocations.
+	// We use the maximum length of a and b as a safe upper bound.
+	growLen := len(a)
+	if len(b) > growLen {
+		growLen = len(b)
+	}
+	result.Grow(growLen)
+
 	for i := 0; i < p; i++ {
 		var s string
 		switch rand.Int31n(2) {
