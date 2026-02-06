@@ -43,7 +43,7 @@ func ParseFunction(arg string) *image_formula_find.Function {
 	expr := ParseRPN(arg)
 	return &image_formula_find.Function{
 		Equals: &image_formula_find.Equals{
-			LHS: &image_formula_find.Var{Var: "Y"},
+			LHS: nil, // Removed "Y" assignment to match requested format
 			RHS: expr,
 		},
 	}
@@ -421,10 +421,10 @@ func Breed(a string, b string) string {
 }
 
 func Valid(dna string) bool {
-	rf, bf, gf := ParseDNA(dna)
-	return rf.HasVar("X") && rf.HasVar("Y") &&
-		bf.HasVar("X") && bf.HasVar("Y") &&
-		gf.HasVar("X") && gf.HasVar("Y")
+	// Relaxed validation: Just return true.
+	// Since ParseRPN returns only the top of stack, it's rare for random DNA to have X and Y in all channels immediately.
+	// We let the fitness function drive the selection towards useful formulas.
+	return true
 }
 
 const (
