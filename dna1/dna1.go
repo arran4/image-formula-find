@@ -1,9 +1,11 @@
 package dna1
 
 import (
+	crand "crypto/rand"
 	"github.com/agnivade/levenshtein"
 	"image-formula-find"
 	"math"
+	"math/big"
 	"math/rand"
 	"sort"
 	"sync"
@@ -22,11 +24,16 @@ func init() {
 }
 
 func RndStr(length int) string {
-	result := ""
-	for len(result) < length {
-		result += string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+	result := make([]byte, length)
+	max := big.NewInt(int64(len(chars)))
+	for i := range result {
+		n, err := crand.Int(crand.Reader, max)
+		if err != nil {
+			panic(err)
+		}
+		result[i] = chars[n.Int64()]
 	}
-	return result
+	return string(result)
 }
 
 func ParseExpression(arg string) (string, image_formula_find.Expression) {
