@@ -27,7 +27,7 @@ func main() {
 	var generations int
 	var steps int
 
-	flag.StringVar(&inputPath, "input", "in5.png", "Path to input image")
+	flag.StringVar(&inputPath, "input", "in.png", "Path to input image")
 	flag.StringVar(&outputPath, "output", "evolution-dna4.gif", "Path to output GIF")
 	flag.IntVar(&generations, "generations", 1000, "Number of generations")
 	flag.IntVar(&steps, "steps", 10, "Number of steps (frames in GIF)")
