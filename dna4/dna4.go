@@ -157,52 +157,52 @@ func ParseRPN(arg string) image_formula_find.Expression {
 		case 23: // Sin
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Sin", Expr: e})
+				push(image_formula_find.NewSingleFunction("Sin", e))
 			}
 		case 24: // Cos
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Cos", Expr: e})
+				push(image_formula_find.NewSingleFunction("Cos", e))
 			}
 		case 25: // Tan
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Tan", Expr: e})
+				push(image_formula_find.NewSingleFunction("Tan", e))
 			}
 		case 26: // Asin
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Asin", Expr: e})
+				push(image_formula_find.NewSingleFunction("Asin", e))
 			}
 		case 27: // Acos
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Acos", Expr: e})
+				push(image_formula_find.NewSingleFunction("Acos", e))
 			}
 		case 28: // Atan
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Atan", Expr: e})
+				push(image_formula_find.NewSingleFunction("Atan", e))
 			}
 		case 29: // Log
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Log", Expr: e})
+				push(image_formula_find.NewSingleFunction("Log", e))
 			}
 		case 30: // Exp
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Exp", Expr: e})
+				push(image_formula_find.NewSingleFunction("Exp", e))
 			}
 		case 31: // Abs
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Abs", Expr: e})
+				push(image_formula_find.NewSingleFunction("Abs", e))
 			}
 		case 32: // Sqrt
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Sqrt", Expr: e})
+				push(image_formula_find.NewSingleFunction("Sqrt", e))
 			}
 
 		// Double Functions (33-34)
@@ -210,7 +210,7 @@ func ParseRPN(arg string) image_formula_find.Expression {
 			rhs := pop()
 			lhs := pop()
 			if lhs != nil && rhs != nil {
-				push(&image_formula_find.DoubleFunction{Name: "Min", Expr1: lhs, Expr2: rhs})
+				push(image_formula_find.NewDoubleFunction("Min", lhs, rhs, false))
 			} else if rhs != nil {
 				push(rhs)
 			}
@@ -218,45 +218,45 @@ func ParseRPN(arg string) image_formula_find.Expression {
 			rhs := pop()
 			lhs := pop()
 			if lhs != nil && rhs != nil {
-				push(&image_formula_find.DoubleFunction{Name: "Max", Expr1: lhs, Expr2: rhs})
+				push(image_formula_find.NewDoubleFunction("Max", lhs, rhs, false))
 			} else if rhs != nil {
 				push(rhs)
 			}
 		case 35: // Sinh
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Sinh", Expr: e})
+				push(image_formula_find.NewSingleFunction("Sinh", e))
 			}
 		case 36: // Cosh
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Cosh", Expr: e})
+				push(image_formula_find.NewSingleFunction("Cosh", e))
 			}
 		case 37: // Tanh
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Tanh", Expr: e})
+				push(image_formula_find.NewSingleFunction("Tanh", e))
 			}
 		case 38: // Ceil
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Ceil", Expr: e})
+				push(image_formula_find.NewSingleFunction("Ceil", e))
 			}
 		case 39: // Floor
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Floor", Expr: e})
+				push(image_formula_find.NewSingleFunction("Floor", e))
 			}
 		case 40: // Round
 			e := pop()
 			if e != nil {
-				push(&image_formula_find.SingleFunction{Name: "Round", Expr: e})
+				push(image_formula_find.NewSingleFunction("Round", e))
 			}
 		case 41: // Atan2
 			rhs := pop()
 			lhs := pop()
 			if lhs != nil && rhs != nil {
-				push(&image_formula_find.DoubleFunction{Name: "Atan2", Expr1: lhs, Expr2: rhs})
+				push(image_formula_find.NewDoubleFunction("Atan2", lhs, rhs, false))
 			} else if rhs != nil {
 				push(rhs)
 			}
@@ -264,7 +264,7 @@ func ParseRPN(arg string) image_formula_find.Expression {
 			rhs := pop()
 			lhs := pop()
 			if lhs != nil && rhs != nil {
-				push(&image_formula_find.DoubleFunction{Name: "Hypot", Expr1: lhs, Expr2: rhs})
+				push(image_formula_find.NewDoubleFunction("Hypot", lhs, rhs, false))
 			} else if rhs != nil {
 				push(rhs)
 			}
@@ -272,7 +272,7 @@ func ParseRPN(arg string) image_formula_find.Expression {
 			rhs := pop()
 			lhs := pop()
 			if lhs != nil && rhs != nil {
-				push(&image_formula_find.DoubleFunction{Name: "Dim", Expr1: lhs, Expr2: rhs})
+				push(image_formula_find.NewDoubleFunction("Dim", lhs, rhs, false))
 			} else if rhs != nil {
 				push(rhs)
 			}

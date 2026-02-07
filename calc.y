@@ -37,9 +37,9 @@ expr: FLOAT             { $$ = &Const{Value: $1} }
     | expr '^' expr     { $$ = &Power{ LHS: $1, RHS: $3, } }
     | '+' expr  %prec Highest    { $$ = $2 }
     | '-' expr  %prec Highest    { $$ = &Negate{ Expr: $2 } }
-    | expr FUNCNAME expr     { $$ = &DoubleFunction{ Infix: true, Name: $2, Expr1: $1, Expr2: $3, } }
-    | FUNCNAME '(' expr ')'  { $$ = &SingleFunction{ Name: $1, Expr: $3 } }
-    | FUNCNAME '(' expr ',' expr ')' { $$ = &DoubleFunction{ Infix: false, Name: $1, Expr1: $3, Expr2: $5 } }
+    | expr FUNCNAME expr     { $$ = NewDoubleFunction($2, $1, $3, true) }
+    | FUNCNAME '(' expr ')'  { $$ = NewSingleFunction($1, $3) }
+    | FUNCNAME '(' expr ',' expr ')' { $$ = NewDoubleFunction($1, $3, $5, false) }
     | '(' expr ')'            { $$ = &Brackets{ Expr: $2 } }
     ;
 

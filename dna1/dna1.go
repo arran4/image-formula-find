@@ -1,11 +1,9 @@
 package dna1
 
 import (
-	crand "crypto/rand"
 	"github.com/agnivade/levenshtein"
 	"image-formula-find"
 	"math"
-	"math/big"
 	"math/rand"
 	"sort"
 	"strings"
@@ -86,12 +84,12 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 		}
 		fi := runeMapPos[farg]
 		lhs, rhs := Split2AndParse(arg)
-		return "", image_formula_find.DoubleFunction{
-			Name:  image_formula_find.FunctionNames[fi%len(image_formula_find.FunctionNames)],
-			Expr1: lhs,
-			Expr2: rhs,
-			Infix: false,
-		}
+		return "", image_formula_find.NewDoubleFunction(
+			image_formula_find.FunctionNames[fi%len(image_formula_find.FunctionNames)],
+			lhs,
+			rhs,
+			false,
+		)
 	case 7:
 		farg := 'A'
 		if len(arg) > 0 {
@@ -100,10 +98,10 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 		}
 		fi := runeMapPos[farg]
 		arg, expr := ParseExpression(arg)
-		return arg, image_formula_find.SingleFunction{
-			Name: image_formula_find.FunctionNames[int(fi)%len(image_formula_find.FunctionNames)],
-			Expr: expr,
-		}
+		return arg, image_formula_find.NewSingleFunction(
+			image_formula_find.FunctionNames[int(fi)%len(image_formula_find.FunctionNames)],
+			expr,
+		)
 	case 8:
 		arg, expr := ParseExpression(arg)
 		return arg, image_formula_find.Negate{
