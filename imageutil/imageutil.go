@@ -35,7 +35,7 @@ type CopyOnRead struct {
 
 func (cow *CopyOnRead) At(x, y int) color.Color {
 	if cow.Copy == nil {
-		cow.Copy = image.NewRGBA(cow.Image.Bounds())
+		cow.Copy = image.NewRGBA(cow.Bounds())
 	}
 	c := cow.Image.At(x, y)
 	cow.Copy.Set(x, y, c)

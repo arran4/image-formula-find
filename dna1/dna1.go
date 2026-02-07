@@ -79,12 +79,12 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 			RHS: rhs,
 		}
 	case 6:
-		var farg rune = 'A'
+		farg := 'A'
 		if len(arg) > 0 {
 			farg = rune(arg[0])
 			arg = arg[1:]
 		}
-		fi, _ := runeMapPos[farg]
+		fi := runeMapPos[farg]
 		lhs, rhs := Split2AndParse(arg)
 		return "", image_formula_find.DoubleFunction{
 			Name:  image_formula_find.FunctionNames[fi%len(image_formula_find.FunctionNames)],
@@ -93,12 +93,12 @@ func ParseExpression(arg string) (string, image_formula_find.Expression) {
 			Infix: false,
 		}
 	case 7:
-		var farg rune = 'A'
+		farg := 'A'
 		if len(arg) > 0 {
 			farg = rune(arg[0])
 			arg = arg[1:]
 		}
-		fi, _ := runeMapPos[farg]
+		fi := runeMapPos[farg]
 		arg, expr := ParseExpression(arg)
 		return arg, image_formula_find.SingleFunction{
 			Name: image_formula_find.FunctionNames[int(fi)%len(image_formula_find.FunctionNames)],

@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"log"
 	"os"
 )
 
@@ -46,7 +47,14 @@ func main() {
 		}
 	}
 
-	f, _ := os.Create("flag.png")
-	png.Encode(f, img)
-	f.Close()
+	f, err := os.Create("flag.png")
+	if err != nil {
+		log.Panicf("Error creating file: %v", err)
+	}
+	if err := png.Encode(f, img); err != nil {
+		log.Panicf("Error encoding png: %v", err)
+	}
+	if err := f.Close(); err != nil {
+		log.Printf("Error closing file: %v", err)
+	}
 }
