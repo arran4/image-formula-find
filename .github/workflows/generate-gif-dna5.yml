@@ -52,3 +52,4 @@ jobs:
           branch: "auto/evolution-dna5-gif"
           base: "main"
           delete-branch: true
+          add-paths: evolution-dna5.gif
