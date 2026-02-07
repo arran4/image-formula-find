@@ -12,10 +12,22 @@ import (
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	i := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	rf, err := image_formula_find.ParseFunction("x = y + 1")
+	if err != nil {
+		log.Fatalf("Invalid red formula: %v", err)
+	}
+	bf, err := image_formula_find.ParseFunction("x = 2 * y + 3")
+	if err != nil {
+		log.Fatalf("Invalid blue formula: %v", err)
+	}
+	gf, err := image_formula_find.ParseFunction("x = 4 * y + 5")
+	if err != nil {
+		log.Fatalf("Invalid green formula: %v", err)
+	}
 	d := &drawer1.Drawer{
-		RedFormula:   image_formula_find.ParseFunction("x = y + 1"),
-		BlueFormula:  image_formula_find.ParseFunction("x = 2 * y + 3"),
-		GreenFormula: image_formula_find.ParseFunction("x = 4 * y + 5"),
+		RedFormula:   rf,
+		BlueFormula:  bf,
+		GreenFormula: gf,
 	}
 	d.Render(i)
 	log.Printf("Red: %s", d.RedFormula.String())
