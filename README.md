@@ -61,6 +61,17 @@ The `dna4` representation implements a **Stack Machine (Reverse Polish Notation)
 
 ![Evolution DNA4](evolution-dna4.gif)
 
+### DNA5 (Interleaved / Striped)
+
+The `dna5` representation improves upon `dna4` by introducing **interleaved splitting** and **reduced mutation volatility**.
+*   **Interleaved Splitting**: Instead of dividing the DNA string into contiguous chunks, characters are assigned to R, G, and B channels in a round-robin fashion (0->R, 1->G, 2->B). This ensures balanced channel lengths and synchronized growth.
+*   **Reduced Volatility**: Mutation logic favors substitution (80%) over insertion/deletion (20%), stabilizing the genome length.
+*   **Target**: Optimized to match `flag_space.png`, which includes a large white border to penalize infinite plane generation.
+
+**Examples of DNA5 Evolution:**
+
+![Evolution DNA5](evolution-dna5.gif)
+
 ## Binaries
 
 *   **`mutateAndSelect`**: The main evolutionary engine. It runs the genetic algorithm, logs progress to `out.csv`, and periodically saves the best result to `out.png`.
@@ -68,6 +79,7 @@ The `dna4` representation implements a **Stack Machine (Reverse Polish Notation)
 *   **`draw1`**: Utility to draw an image from a given formula.
 *   **`generateGifDna3`**: Utility to generate evolution GIFs using the DNA3 representation.
 *   **`generateGifDna4`**: Utility to generate evolution GIFs using the DNA4 representation.
+*   **`generateGifDna5`**: Utility to generate evolution GIFs using the DNA5 representation.
 
 ## Usage
 
