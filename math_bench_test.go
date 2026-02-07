@@ -7,7 +7,7 @@ import (
 func BenchmarkSingleFunctionEvaluate(b *testing.B) {
 	// Setup
 	sf := NewSingleFunction("Sin", &Var{Var: "x"})
-	state := &RealState{X: 0.5, Y: 0.5, T: 1}
+	state := &State{X: 0.5, Y: 0.5, T: 1}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -18,7 +18,7 @@ func BenchmarkSingleFunctionEvaluate(b *testing.B) {
 func BenchmarkDoubleFunctionEvaluate(b *testing.B) {
 	// Setup
 	df := NewDoubleFunction("Pow", &Var{Var: "x"}, &Const{Value: 2}, false)
-	state := &RealState{X: 0.5, Y: 0.5, T: 1}
+	state := &State{X: 0.5, Y: 0.5, T: 1}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
