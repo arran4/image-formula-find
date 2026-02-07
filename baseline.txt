@@ -1,0 +1,8 @@
+goos: linux
+goarch: amd64
+pkg: image-formula-find
+cpu: Intel(R) Xeon(R) Processor @ 2.30GHz
+BenchmarkSingleFunctionEvaluate-4   	 7927374	       145.9 ns/op	      16 B/op	       2 allocs/op
+BenchmarkDoubleFunctionEvaluate-4   	 7319576	       161.9 ns/op	      16 B/op	       2 allocs/op
+PASS
+ok  	image-formula-find	2.676s

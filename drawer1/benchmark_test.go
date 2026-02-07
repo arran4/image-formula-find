@@ -41,13 +41,13 @@ func BenchmarkDrawerAt_Heavy(b *testing.B) {
 	for i := 0; i < 20; i++ {
 		expr = &image_formula_find.Multiply{
 			LHS: expr,
-			RHS: &image_formula_find.SingleFunction{
-				Name: "Sin",
-				Expr: &image_formula_find.Plus{
+			RHS: image_formula_find.NewSingleFunction(
+				"Sin",
+				&image_formula_find.Plus{
 					LHS: vY,
 					RHS: &image_formula_find.Const{Value: float64(i)},
 				},
-			},
+			),
 		}
 	}
 

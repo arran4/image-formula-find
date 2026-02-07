@@ -183,10 +183,7 @@ func Resolve(idx int, dna string) image_formula_find.Expression {
 		if v >= 54 {
 			// Op
 			opName := MapOp(v)
-			expr = &image_formula_find.SingleFunction{
-				Name: opName,
-				Expr: expr,
-			}
+			expr = image_formula_find.NewSingleFunction(opName, expr)
 		} else {
 			// Number -> Add
 			// Note: We use MapValue again here, or should we use a simpler addition?

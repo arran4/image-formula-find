@@ -468,6 +468,12 @@ func (v Brackets) Depth() int {
 type SingleFunction struct {
 	Name string
 	Expr Expression
+	Fn   SingleFunctionDef
+}
+
+func NewSingleFunction(name string, expr Expression) *SingleFunction {
+	f := SingleFunctions[strings.ToUpper(name)]
+	return &SingleFunction{Name: name, Expr: expr, Fn: f}
 }
 
 func (v SingleFunction) HasVar(vs string) bool {
@@ -476,7 +482,9 @@ func (v SingleFunction) HasVar(vs string) bool {
 
 func (v SingleFunction) Evaluate(state *State) float64 {
 	var r = v.Expr.Evaluate(state)
-	if f, ok := SingleFunctions[strings.ToUpper(v.Name)]; ok {
+	if v.Fn != nil {
+		r = v.Fn(r)
+	} else if f, ok := SingleFunctions[strings.ToUpper(v.Name)]; ok {
 		r = f(r)
 	}
 	return r
@@ -500,6 +508,12 @@ type DoubleFunction struct {
 	Expr1 Expression
 	Expr2 Expression
 	Infix bool
+	Fn    DoubleFunctionDef
+}
+
+func NewDoubleFunction(name string, expr1, expr2 Expression, infix bool) *DoubleFunction {
+	f := DoubleFunctions[strings.ToUpper(name)]
+	return &DoubleFunction{Name: name, Expr1: expr1, Expr2: expr2, Infix: infix, Fn: f}
 }
 
 func (v DoubleFunction) HasVar(vs string) bool {
@@ -509,7 +523,9 @@ func (v DoubleFunction) HasVar(vs string) bool {
 func (v DoubleFunction) Evaluate(state *State) float64 {
 	var r1 = v.Expr1.Evaluate(state)
 	var r2 = v.Expr2.Evaluate(state)
-	if f, ok := DoubleFunctions[strings.ToUpper(v.Name)]; ok {
+	if v.Fn != nil {
+		r1 = v.Fn(r1, r2)
+	} else if f, ok := DoubleFunctions[strings.ToUpper(v.Name)]; ok {
 		r1 = f(r1, r2)
 	}
 	return r1
