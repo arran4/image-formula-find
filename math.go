@@ -3,7 +3,6 @@ package image_formula_find
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 )
@@ -624,10 +623,10 @@ func init() {
 	}
 }
 
-func ParseFunction(arg string) *Function {
+func ParseFunction(arg string) (*Function, error) {
 	yyResult = nil
 	if r := yyParse(NewCalcLexer(arg)); r != 0 {
-		log.Panic("Invalid formula: ", arg, " Left with ", yyResult)
+		return nil, fmt.Errorf("invalid formula: %s", arg)
 	}
-	return yyResult
+	return yyResult, nil
 }
