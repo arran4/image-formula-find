@@ -6,7 +6,10 @@ import (
 
 func TestEvaluateCorrectness(t *testing.T) {
 	exprStr := "y = x * 2"
-	f := ParseFunction(exprStr)
+	f, err := ParseFunction(exprStr)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if f == nil {
 		t.Fatal("Failed to parse function")
 	}

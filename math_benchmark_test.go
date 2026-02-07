@@ -6,7 +6,10 @@ import (
 
 func BenchmarkEvaluate(b *testing.B) {
 	exprStr := "y / 4 = x * x + 2"
-	f := ParseFunction(exprStr)
+	f, err := ParseFunction(exprStr)
+	if err != nil {
+		b.Fatal(err)
+	}
 	if f == nil {
 		b.Fatal("Failed to parse function")
 	}
