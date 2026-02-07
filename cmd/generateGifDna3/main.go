@@ -11,6 +11,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
+	"math"
 	"os"
 
 	"github.com/arran4/golang-wordwrap"
@@ -45,7 +46,7 @@ func main() {
 		padding       = 10
 		labelHeight   = 20
 		formulaHeight = 150
-		dnaBarHeight  = 30
+		dnaBarHeight  = 120
 		borderWidth   = 2
 	)
 
@@ -228,29 +229,72 @@ func drawDNABar(img *image.RGBA, r image.Rectangle, dna string) {
 	// Split DNA into R, G, B channels
 	rStr, gStr, bStr := dna3.SplitString3(dna)
 
-	drawChannelBar := func(rect image.Rectangle, s string, baseColor color.RGBA) {
+	drawChannelBar := func(rect image.Rectangle, s string) {
 		if len(s) == 0 {
 			return
 		}
-		width := float64(rect.Dx()) / float64(len(s))
+
+		// Use a fixed block width for visibility
+		const blockWidth = 4
+		const rowHeight = 10
+
+		// Calculate how many blocks fit in a row
+		blocksPerRow := rect.Dx() / blockWidth
+		if blocksPerRow < 1 { blocksPerRow = 1 }
+
 		for i, char := range s {
-			x1 := rect.Min.X + int(float64(i)*width)
-			x2 := rect.Min.X + int(float64(i+1)*width)
+			// Calculate position with wrapping
+			row := i / blocksPerRow
+			col := i % blocksPerRow
 
-			// Map char to intensity or shade
-			// A-Z...
-			val := int(char) % 255
+			x1 := rect.Min.X + col*blockWidth
+			y1 := rect.Min.Y + row*rowHeight
+			x2 := x1 + blockWidth
+			y2 := y1 + rowHeight
 
-			c := baseColor
-			// Vary intensity based on char value
-			c.A = uint8(100 + val%155) // Ensure some visibility
+			// Stop if we exceed the allotted rectangle height
+			if y2 > rect.Max.Y {
+				break
+			}
 
-			draw.Draw(img, image.Rect(x1, rect.Min.Y, x2, rect.Max.Y), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
+			// Map char to color
+			// A-Z, a-z, 0-9...
+			hue := (int(char) * 10) % 360
+			// Simple HSV to RGB conversion for Saturation=1, Value=1
+			c := hsvToRGB(float64(hue), 1.0, 1.0)
+
+			draw.Draw(img, image.Rect(x1, y1, x2, y2), &image.Uniform{c}, image.Pt(0, 0), draw.Src)
 		}
 	}
 
 	h := r.Dy() / 3
-	drawChannelBar(image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Min.Y+h), rStr, color.RGBA{255, 0, 0, 255})
-	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+h, r.Max.X, r.Min.Y+2*h), gStr, color.RGBA{0, 255, 0, 255})
-	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+2*h, r.Max.X, r.Max.Y), bStr, color.RGBA{0, 0, 255, 255})
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Min.Y+h), rStr)
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+h, r.Max.X, r.Min.Y+2*h), gStr)
+	drawChannelBar(image.Rect(r.Min.X, r.Min.Y+2*h, r.Max.X, r.Max.Y), bStr)
+}
+
+func hsvToRGB(h, s, v float64) color.RGBA {
+	c := v * s
+	x := c * (1 - math.Abs(math.Mod(h/60.0, 2)-1))
+	m := v - c
+	var r, g, b float64
+	if h >= 0 && h < 60 {
+		r, g, b = c, x, 0
+	} else if h >= 60 && h < 120 {
+		r, g, b = x, c, 0
+	} else if h >= 120 && h < 180 {
+		r, g, b = 0, c, x
+	} else if h >= 180 && h < 240 {
+		r, g, b = 0, x, c
+	} else if h >= 240 && h < 300 {
+		r, g, b = x, 0, c
+	} else {
+		r, g, b = c, 0, x
+	}
+	return color.RGBA{
+		R: uint8((r + m) * 255),
+		G: uint8((g + m) * 255),
+		B: uint8((b + m) * 255),
+		A: 255,
+	}
 }

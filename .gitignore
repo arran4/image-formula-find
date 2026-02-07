@@ -8,3 +8,9 @@ out*.png
 /watchMutateAndSelect
 /draw1
 /generateGifDna4
+/draw2
+/fromRndStr
+/genFlag
+/generateGifDna3
+/greensquare
+/mutateFromRndStr
