@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 )
 
 var (
@@ -16,35 +17,29 @@ var (
 type SingleFunctionDef func(float64) float64
 type DoubleFunctionDef func(float64, float64) float64
 
-type State interface {
-	CurX() float64
-	CurY() float64
-	CurT() int
-}
-
-type RealState struct {
+type State struct {
 	X, Y                            float64
 	T                               int
 	AccessedX, AccessedY, AccessedT bool
 }
 
-func (rs *RealState) CurX() float64 {
+func (rs *State) CurX() float64 {
 	rs.AccessedX = true
 	return rs.X
 }
 
-func (rs *RealState) CurY() float64 {
+func (rs *State) CurY() float64 {
 	rs.AccessedY = true
 	return rs.Y
 }
 
-func (rs *RealState) CurT() int {
+func (rs *State) CurT() int {
 	rs.AccessedT = true
 	return rs.T
 }
 
 type Expression interface {
-	Evaluate(state State) float64
+	Evaluate(state *State) float64
 	String() string
 	Depth() int
 	Simplify() Expression
@@ -55,20 +50,28 @@ type Function struct {
 	Equals *Equals
 }
 
+var statePool = sync.Pool{
+	New: func() interface{} {
+		return &State{}
+	},
+}
+
 func (v Function) Evaluate(X, Y float64, T int) (weight float64, TUsed bool, err error) {
-	state := &RealState{
-		X:         X,
-		Y:         Y,
-		T:         T,
-		AccessedX: false,
-		AccessedY: false,
-		AccessedT: false,
-	}
 	if v.Equals == nil {
 		return 0, false, errors.New("no such formula")
 	}
+
+	state := statePool.Get().(*State)
+	state.X = X
+	state.Y = Y
+	state.T = T
+	state.AccessedX = false
+	state.AccessedY = false
+	state.AccessedT = false
+
 	weight = v.Equals.Evaluate(state)
 	TUsed = state.AccessedT
+	statePool.Put(state)
 	return
 }
 
@@ -91,7 +94,7 @@ type Equals struct {
 	RHS Expression
 }
 
-func (v Equals) Evaluate(state State) float64 {
+func (v Equals) Evaluate(state *State) float64 {
 	if v.LHS == nil {
 		return v.RHS.Evaluate(state)
 	}
@@ -147,7 +150,18 @@ func (v Var) HasVar(vs string) bool {
 	return v.Var == vs
 }
 
-func (v Var) Evaluate(state State) float64 {
+func (v Var) Evaluate(state *State) float64 {
+	if len(v.Var) == 1 {
+		if v.Var[0] == 'x' || v.Var[0] == 'X' {
+			return float64(state.CurX())
+		}
+		if v.Var[0] == 'y' || v.Var[0] == 'Y' {
+			return float64(state.CurY())
+		}
+		if v.Var[0] == 't' || v.Var[0] == 'T' {
+			return float64(state.CurT())
+		}
+	}
 	switch strings.ToUpper(v.Var) {
 	case "X":
 		return float64(state.CurX())
@@ -180,7 +194,7 @@ func (c Const) HasVar(vs string) bool {
 	return false
 }
 
-func (c Const) Evaluate(state State) float64 {
+func (c Const) Evaluate(state *State) float64 {
 	return c.Value
 }
 
@@ -205,7 +219,7 @@ func (v Plus) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Plus) Evaluate(state State) float64 {
+func (v Plus) Evaluate(state *State) float64 {
 	return v.RHS.Evaluate(state) + v.LHS.Evaluate(state)
 }
 
@@ -236,7 +250,7 @@ func (v Subtract) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Subtract) Evaluate(state State) float64 {
+func (v Subtract) Evaluate(state *State) float64 {
 	return v.RHS.Evaluate(state) - v.LHS.Evaluate(state)
 }
 
@@ -267,7 +281,7 @@ func (v Multiply) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Multiply) Evaluate(state State) float64 {
+func (v Multiply) Evaluate(state *State) float64 {
 	return v.RHS.Evaluate(state) * v.LHS.Evaluate(state)
 }
 
@@ -298,7 +312,7 @@ func (v Divide) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Divide) Evaluate(state State) float64 {
+func (v Divide) Evaluate(state *State) float64 {
 	return v.RHS.Evaluate(state) / v.LHS.Evaluate(state)
 }
 
@@ -329,7 +343,7 @@ func (v Power) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Power) Evaluate(state State) float64 {
+func (v Power) Evaluate(state *State) float64 {
 	return math.Pow(v.LHS.Evaluate(state), v.RHS.Evaluate(state))
 }
 
@@ -360,7 +374,7 @@ func (v Modulus) HasVar(vs string) bool {
 	return v.RHS.HasVar(vs) || v.LHS.HasVar(vs)
 }
 
-func (v Modulus) Evaluate(state State) float64 {
+func (v Modulus) Evaluate(state *State) float64 {
 	return math.Mod(v.LHS.Evaluate(state), v.RHS.Evaluate(state))
 }
 
@@ -390,7 +404,7 @@ func (v Negate) HasVar(vs string) bool {
 	return v.Expr.HasVar(vs)
 }
 
-func (v Negate) Evaluate(state State) float64 {
+func (v Negate) Evaluate(state *State) float64 {
 	return -v.Expr.Evaluate(state)
 }
 
@@ -426,7 +440,7 @@ func (v Brackets) HasVar(vs string) bool {
 	return v.Expr.HasVar(vs)
 }
 
-func (v Brackets) Evaluate(state State) float64 {
+func (v Brackets) Evaluate(state *State) float64 {
 	return v.Expr.Evaluate(state)
 }
 
@@ -460,7 +474,7 @@ func (v SingleFunction) HasVar(vs string) bool {
 	return v.Expr.HasVar(vs)
 }
 
-func (v SingleFunction) Evaluate(state State) float64 {
+func (v SingleFunction) Evaluate(state *State) float64 {
 	var r = v.Expr.Evaluate(state)
 	if f, ok := SingleFunctions[strings.ToUpper(v.Name)]; ok {
 		r = f(r)
@@ -492,7 +506,7 @@ func (v DoubleFunction) HasVar(vs string) bool {
 	return v.Expr1.HasVar(vs) || v.Expr2.HasVar(vs)
 }
 
-func (v DoubleFunction) Evaluate(state State) float64 {
+func (v DoubleFunction) Evaluate(state *State) float64 {
 	var r1 = v.Expr1.Evaluate(state)
 	var r2 = v.Expr2.Evaluate(state)
 	if f, ok := DoubleFunctions[strings.ToUpper(v.Name)]; ok {
