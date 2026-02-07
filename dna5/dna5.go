@@ -1,0 +1,536 @@
+package dna5
+
+import (
+	"image-formula-find"
+	"math"
+	"math/rand"
+	"sort"
+	"strings"
+	"sync"
+
+	"github.com/agnivade/levenshtein"
+)
+
+const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+var (
+	runeMapPos = map[rune]int{}
+)
+
+func init() {
+	for p, c := range chars {
+		runeMapPos[c] = p
+	}
+}
+
+func RndStr(length int) string {
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = chars[rand.Int31n(int32(len(chars)))]
+	}
+	return string(result)
+}
+
+// ParseDNA splits the DNA into 3 channels (R, G, B) and parses each using the Stack Machine (RPN).
+func ParseDNA(dna string) (*image_formula_find.Function, *image_formula_find.Function, *image_formula_find.Function) {
+	rd, gd, bd := SplitString3(dna)
+	rf := ParseFunction(rd)
+	gf := ParseFunction(gd)
+	bf := ParseFunction(bd)
+	// Return in order expected by Individual: R, B, G
+	return rf, bf, gf
+}
+
+func ParseFunction(arg string) *image_formula_find.Function {
+	expr := ParseRPN(arg)
+	return &image_formula_find.Function{
+		Equals: &image_formula_find.Equals{
+			LHS: nil, // Removed "Y" assignment to match requested format
+			RHS: expr,
+		},
+	}
+}
+
+func ParseRPN(arg string) image_formula_find.Expression {
+	stack := []image_formula_find.Expression{}
+
+	push := func(e image_formula_find.Expression) {
+		stack = append(stack, e)
+	}
+	pop := func() image_formula_find.Expression {
+		if len(stack) == 0 {
+			return nil
+		}
+		e := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		return e
+	}
+
+	for _, char := range arg {
+		idx, ok := runeMapPos[char]
+		if !ok {
+			continue
+		}
+
+		switch idx {
+		// Vars (0-2)
+		case 0:
+			push(&image_formula_find.Var{Var: "X"})
+		case 1:
+			push(&image_formula_find.Var{Var: "Y"})
+		case 2:
+			push(&image_formula_find.Var{Var: "T"})
+
+		// Consts (3-10)
+		case 3:
+			push(&image_formula_find.Const{Value: 0.1})
+		case 4:
+			push(&image_formula_find.Const{Value: -0.1})
+		case 5:
+			push(&image_formula_find.Const{Value: 1})
+		case 6:
+			push(&image_formula_find.Const{Value: -1})
+		case 7:
+			push(&image_formula_find.Const{Value: 0})
+		case 8:
+			push(&image_formula_find.Const{Value: 0.5})
+		case 9:
+			push(&image_formula_find.Const{Value: -0.5})
+		case 10:
+			push(&image_formula_find.Const{Value: math.Pi})
+
+		// Binary Ops (16-21)
+		case 16: // +
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Plus{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 17: // -
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Subtract{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 18: // *
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Multiply{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 19: // /
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Divide{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 20: // ^
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Power{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 21: // %
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(&image_formula_find.Modulus{LHS: lhs, RHS: rhs})
+			} else if rhs != nil {
+				push(rhs)
+			}
+
+		// Unary Ops (22-32)
+		case 22: // Negate
+			e := pop()
+			if e != nil {
+				push(&image_formula_find.Negate{Expr: e})
+			}
+		case 23: // Sin
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Sin", e))
+			}
+		case 24: // Cos
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Cos", e))
+			}
+		case 25: // Tan
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Tan", e))
+			}
+		case 26: // Asin
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Asin", e))
+			}
+		case 27: // Acos
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Acos", e))
+			}
+		case 28: // Atan
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Atan", e))
+			}
+		case 29: // Log
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Log", e))
+			}
+		case 30: // Exp
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Exp", e))
+			}
+		case 31: // Abs
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Abs", e))
+			}
+		case 32: // Sqrt
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Sqrt", e))
+			}
+
+		// Double Functions (33-34)
+		case 33: // Min
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(image_formula_find.NewDoubleFunction("Min", lhs, rhs, false))
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 34: // Max
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(image_formula_find.NewDoubleFunction("Max", lhs, rhs, false))
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 35: // Sinh
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Sinh", e))
+			}
+		case 36: // Cosh
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Cosh", e))
+			}
+		case 37: // Tanh
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Tanh", e))
+			}
+		case 38: // Ceil
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Ceil", e))
+			}
+		case 39: // Floor
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Floor", e))
+			}
+		case 40: // Round
+			e := pop()
+			if e != nil {
+				push(image_formula_find.NewSingleFunction("Round", e))
+			}
+		case 41: // Atan2
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(image_formula_find.NewDoubleFunction("Atan2", lhs, rhs, false))
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 42: // Hypot
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(image_formula_find.NewDoubleFunction("Hypot", lhs, rhs, false))
+			} else if rhs != nil {
+				push(rhs)
+			}
+		case 43: // Dim
+			rhs := pop()
+			lhs := pop()
+			if lhs != nil && rhs != nil {
+				push(image_formula_find.NewDoubleFunction("Dim", lhs, rhs, false))
+			} else if rhs != nil {
+				push(rhs)
+			}
+
+		default:
+			// Map other chars to small random constants based on index
+			// Indices not used: 11-15, 44-63.
+			// Let's use them for more constants.
+			v := float64(idx-44) / 5.0
+			push(&image_formula_find.Const{Value: v})
+		}
+	}
+
+	if len(stack) == 0 {
+		return &image_formula_find.Const{Value: 0}
+	}
+
+	return stack[len(stack)-1]
+}
+
+func SplitString3(arg string) (string, string, string) {
+	var p1, p2, p3 strings.Builder
+	p1.Grow(len(arg)/3 + 1)
+	p2.Grow(len(arg)/3 + 1)
+	p3.Grow(len(arg)/3 + 1)
+
+	for i, r := range arg {
+		switch i % 3 {
+		case 0:
+			p1.WriteRune(r)
+		case 1:
+			p2.WriteRune(r)
+		case 2:
+			p3.WriteRune(r)
+		}
+	}
+	return p1.String(), p2.String(), p3.String()
+}
+
+func Mutate(a string) string {
+	// Weights:
+	// 0-7: PositionMutate (Substitution) - 80% (8/10)
+	// 8: InsertMutate - 10% (1/10)
+	// 9: DeleteMutate - 10% (1/10)
+
+	switch rand.Int31n(10) {
+	case 8:
+		return InsertMutate(a)
+	case 9:
+		return DeleteMutate(a)
+	default:
+		return PositionMutate(a)
+	}
+}
+
+func UnshiftMutate(a string) string {
+	return string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a
+}
+
+func InsertMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a[p:]
+}
+
+func DeleteMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + a[p+1:]
+}
+
+func ShiftMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	return a[1:]
+}
+
+func PopMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	return a[:len(a)-1]
+}
+
+func AppendMutate(a string) string {
+	return a + string([]byte{chars[rand.Int31n(int32(len(chars)))]})
+}
+
+func PositionMutate(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	p := int(rand.Int31n(int32(len(a))))
+	return a[:p] + string([]byte{chars[rand.Int31n(int32(len(chars)))]}) + a[p+1:]
+}
+
+func Breed(a string, b string) string {
+	p := 10
+	if len(a) < p {
+		p = len(a)
+	}
+	if len(b) < p {
+		p = len(b)
+	}
+	var sb strings.Builder
+	l := len(a)
+	if len(b) > l {
+		l = len(b)
+	}
+	sb.Grow(l)
+	for i := 0; i < p; i++ {
+		var s string
+		switch rand.Int31n(2) {
+		case 0:
+			s = a
+		case 1:
+			s = b
+		}
+		st := (len(s) / p) * i
+		e := (len(s) / p) * (i + 1)
+		sb.WriteString(s[st:e])
+	}
+	return sb.String()
+}
+
+func Valid(dna string) bool {
+	// Relaxed validation: Just return true.
+	// Since ParseRPN returns only the top of stack, it's rare for random DNA to have X and Y in all channels immediately.
+	// We let the fitness function drive the selection towards useful formulas.
+	return true
+}
+
+const (
+	childrenCount = 10
+)
+
+func GenerationProcess(worker Required, lastGeneration []*Individual, generation int, newDNA chan string) []*Individual {
+	const mutations = 8
+	var children = make([]*Individual, 0, len(lastGeneration)*mutations+len(lastGeneration)*len(lastGeneration)+childrenCount+1)
+
+	seen := map[string]struct{}{}
+
+	for _, p := range lastGeneration {
+		dna := p.DNA
+		if _, ok := seen[dna]; ok {
+			continue
+		}
+		seen[dna] = struct{}{}
+		children = append(children, p)
+	}
+
+	for _, p := range lastGeneration {
+		for i := 0; i <= mutations; i++ {
+			dna := p.DNA
+			for m := 0; m <= i; m++ {
+				dna = Mutate(dna)
+			}
+			if _, ok := seen[dna]; ok {
+				continue
+			}
+			seen[dna] = struct{}{}
+			if !Valid(dna) {
+				continue
+			}
+			children = append(children, &Individual{
+				DNA:             dna,
+				Parent:          []*Individual{p},
+				FirstGeneration: generation,
+				Lineage:         p.DNA,
+			})
+		}
+	}
+
+	if len(lastGeneration) > 4 {
+		p1 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
+		p2 := lastGeneration[int(rand.Int31n(int32(len(lastGeneration))))]
+		dna := Breed(p1.DNA, p2.DNA)
+		if _, ok := seen[dna]; !ok {
+			seen[dna] = struct{}{}
+
+			if Valid(dna) {
+				if dna != p1.DNA && dna != p2.DNA && p1.Lineage != p2.Lineage {
+					children = append(children, &Individual{
+						DNA: dna,
+						Parent: []*Individual{
+							p1, p2,
+						},
+						Lineage:         dna,
+						FirstGeneration: generation,
+					})
+				}
+			}
+		}
+	}
+
+	for len(children) < childrenCount {
+		dna, ok := <-newDNA
+		if !ok {
+			break
+		}
+		if _, ok := seen[dna]; ok {
+			continue
+		}
+		seen[dna] = struct{}{}
+		if !Valid(dna) {
+			continue
+		}
+		children = append(children, &Individual{
+			DNA:             dna,
+			Lineage:         dna,
+			FirstGeneration: generation,
+		})
+	}
+
+	wg := sync.WaitGroup{}
+	for fi := range children {
+		wg.Add(1)
+		go func(i int, child *Individual) {
+			defer wg.Done()
+			child.Calculate(worker)
+		}(fi, children[fi])
+	}
+	wg.Wait()
+
+	sort.Sort((&Sorter{
+		Children: children,
+	}))
+
+	lastGeneration = make([]*Individual, 0, childrenCount)
+	for len(lastGeneration) < childrenCount && len(children) > 0 {
+		child := children[0]
+		children = children[1:]
+
+		minDistance := math.MaxInt
+		for _, lg := range lastGeneration {
+			m := levenshtein.ComputeDistance(lg.DNA, child.DNA)
+			if m < minDistance {
+				minDistance = m
+				if minDistance < 10 {
+					break
+				}
+			}
+		}
+
+		if minDistance < 10 {
+			continue
+		}
+
+		lastGeneration = append(lastGeneration, child)
+	}
+	sort.Sort((&Sorter{
+		Children: lastGeneration,
+	}))
+	return lastGeneration
+}
