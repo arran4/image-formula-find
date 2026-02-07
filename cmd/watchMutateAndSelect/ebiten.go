@@ -4,22 +4,15 @@ package main
 
 import (
 	"fmt"
-	"image"
 	"image-formula-find/worker"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 	"log"
-	"os"
 
 	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-func main() {
-	log.SetFlags(log.Flags() | log.Lshortfile)
-	game := NewGame()
-	go game.Work()
+func run(w *worker.Worker) {
+	game := NewGame(w)
 	ebiten.SetWindowSize(640*2, 480*3)
 	ebiten.SetWindowTitle("Watch Generator")
 	if err := ebiten.RunGame(game); err != nil {
@@ -73,26 +66,8 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 	return outsideWidth, outsideHeight
 }
 
-func NewGame() *Game {
-	w := worker.NewWorker(LoadImage())
+func NewGame(w *worker.Worker) *Game {
 	return &Game{
 		Worker: w,
 	}
-}
-
-func LoadImage() image.Image {
-	fin, err := os.Open("in5.png")
-	if err != nil {
-		log.Panicf("Error: %v", err)
-	}
-	defer func() {
-		if err := fin.Close(); err != nil {
-			log.Printf("Error closing file: %v", err)
-		}
-	}()
-	i, _, err := image.Decode(fin)
-	if err != nil {
-		log.Panicf("error: %v", err)
-	}
-	return i
 }
