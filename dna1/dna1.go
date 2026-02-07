@@ -1,11 +1,9 @@
 package dna1
 
 import (
-	crand "crypto/rand"
 	"github.com/agnivade/levenshtein"
 	"image-formula-find"
 	"math"
-	"math/big"
 	"math/rand"
 	"sort"
 	"strings"
