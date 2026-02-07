@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"image-formula-find/dna1"
 	"image-formula-find/worker"
 	_ "image/gif"
 	_ "image/jpeg"
