@@ -3,18 +3,23 @@ name: Generate DNA5 GIF
 on:
   push:
     branches:
-      - '**'
+      - main
+      - master
   workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   generate-gif:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.24.0'
 
@@ -33,16 +38,17 @@ jobs:
         run: ./generateGifDna5 -generations 1000 -steps 10 -output evolution-dna5.gif
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: evolution-dna5-gif
           path: evolution-dna5.gif
 
-      - name: Commit GIF to Repo (Optional)
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add evolution-dna5.gif
-          git commit -m "Add generated evolution-dna5.gif" || echo "No changes to commit"
-          git push || echo "Push failed"
-        continue-on-error: true
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Add generated evolution-dna5.gif"
+          title: "Add generated evolution-dna5.gif"
+          body: "This PR adds the automatically generated evolution-dna5.gif from the latest push to main."
+          branch: "auto/evolution-dna5-gif"
+          base: "main"
+          delete-branch: true
