@@ -1,5 +1,3 @@
-//go:build !noebiten
-
 package main
 
 import (
@@ -11,61 +9,58 @@ import (
 	_ "image/png"
 	"log"
 	"os"
-
-	ebiten "github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	game := NewGame()
 	go game.Work()
-	ebiten.SetWindowSize(640*2, 480*3)
-	ebiten.SetWindowTitle("Watch Generator")
-	if err := ebiten.RunGame(game); err != nil {
+	EbitenSetWindowSize(640*2, 480*3)
+	EbitenSetWindowTitle("Watch Generator")
+	if err := EbitenRunGame(game); err != nil {
 		log.Fatal(err)
 	}
 }
 
 type Game struct {
 	*worker.Worker
-	esrcimg *ebiten.Image
+	esrcimg *EbitenImage
 }
 
 func (game *Game) Update() error {
 	return nil
 }
 
-func (game *Game) Draw(screen *ebiten.Image) {
+func (game *Game) Draw(screen *EbitenImage) {
 	game.RLock()
 	defer game.RUnlock()
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Generation %d", game.Generation))
-	op := &ebiten.DrawImageOptions{}
+	EbitenDebugPrint(screen, fmt.Sprintf("Generation %d", game.Generation))
+	op := EbitenNewDrawImageOptions()
 	const offsetY = 20
-	op.GeoM.Translate(0, offsetY)
+	EbitenTranslate(op, 0, offsetY)
 	if game.esrcimg == nil {
-		game.esrcimg = ebiten.NewImageFromImage(game.SourceImage())
+		game.esrcimg = EbitenNewImageFromImage(game.SourceImage())
 	}
 	screen.DrawImage(game.esrcimg, op)
 	for i, ind := range game.LastGeneration {
-		op := &ebiten.DrawImageOptions{}
+		op := EbitenNewDrawImageOptions()
 		tx := 0 //(worker.srcimg.Bounds().Dx()+10)
 		ty := (game.SourceImage().Bounds().Dy() + 10) * (i + 1)
-		op.GeoM.Translate(float64(tx), float64(ty))
+		EbitenTranslate(op, float64(tx), float64(ty))
 		i := ind.Image()
 		if i != nil {
-			screen.DrawImage(ebiten.NewImageFromImage(i), op)
+			screen.DrawImage(EbitenNewImageFromImage(i), op)
 		}
 		tx += (game.SourceImage().Bounds().Dx() + 10)
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Score %f", ind.Score), tx, ty)
+		EbitenDebugPrintAt(screen, fmt.Sprintf("Score %f", ind.Score), tx, ty)
 		ty += 20
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("DNA %s", ind.DNA), tx, ty)
+		EbitenDebugPrintAt(screen, fmt.Sprintf("DNA %s", ind.DNA), tx, ty)
 		ty += 20
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Red   = %s", ind.Rf.String()), tx, ty)
+		EbitenDebugPrintAt(screen, fmt.Sprintf("Red   = %s", ind.Rf.String()), tx, ty)
 		ty += 20
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Green = %s", ind.Gf.String()), tx, ty)
+		EbitenDebugPrintAt(screen, fmt.Sprintf("Green = %s", ind.Gf.String()), tx, ty)
 		ty += 20
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Blue  = %s", ind.Bf.String()), tx, ty)
+		EbitenDebugPrintAt(screen, fmt.Sprintf("Blue  = %s", ind.Bf.String()), tx, ty)
 	}
 }
 
