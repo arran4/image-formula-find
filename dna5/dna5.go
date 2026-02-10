@@ -323,8 +323,12 @@ func Mutate(a string) string {
 
 	r := rand.Int31n(10)
 	if len(a) >= MaxLength && r == 8 {
-		// Bias towards shrinking
-		r = 9
+		// Bias towards shrinking or neutral
+		if rand.Int31n(2) == 0 {
+			r = 9 // Delete
+		} else {
+			r = 0 // Substitution (PositionMutate)
+		}
 	}
 
 	switch r {
