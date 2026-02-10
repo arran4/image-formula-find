@@ -12,6 +12,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"time"
 
 	"math"
 
@@ -84,8 +85,24 @@ func main() {
 
 	log.Printf("Starting evolution. Generations: %d, Steps: %d, Interval: %d", generations, steps, stepInterval)
 
+	startTime := time.Now()
+	lastLogTime := time.Now()
+
 	for generation := 0; generation < generations; generation++ {
 		lastGeneration = dna5.GenerationProcess(worker, lastGeneration, generation, newDNA)
+
+		// Log progress every 10 seconds to keep CI alive and inform user
+		if time.Since(lastLogTime) > 10*time.Second {
+			elapsed := time.Since(startTime)
+			avgTimePerGen := elapsed / time.Duration(generation+1)
+			remainingGens := generations - (generation + 1)
+			estimatedRemaining := avgTimePerGen * time.Duration(remainingGens)
+
+			log.Printf("Generation %d/%d (%.2f%%). Elapsed: %v. Estimated remaining: %v",
+				generation+1, generations, float64(generation+1)/float64(generations)*100,
+				elapsed.Round(time.Second), estimatedRemaining.Round(time.Second))
+			lastLogTime = time.Now()
+		}
 
 		if (generation+1)%stepInterval == 0 || generation == generations-1 {
 			log.Printf("Capturing frame at generation %d", generation+1)
