@@ -13,6 +13,8 @@ import (
 
 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
+const MaxLength = 1000
+
 var (
 	runeMapPos = map[rune]int{}
 )
@@ -319,7 +321,13 @@ func Mutate(a string) string {
 	// 8: InsertMutate - 10% (1/10)
 	// 9: DeleteMutate - 10% (1/10)
 
-	switch rand.Int31n(10) {
+	r := rand.Int31n(10)
+	if len(a) >= MaxLength && r == 8 {
+		// Bias towards shrinking
+		r = 9
+	}
+
+	switch r {
 	case 8:
 		return InsertMutate(a)
 	case 9:
