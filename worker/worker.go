@@ -2,7 +2,7 @@ package worker
 
 import (
 	"image"
-	"image-formula-find/dna1"
+	"image-formula-find/dna6"
 	"log"
 	"sort"
 	"sync"
@@ -10,11 +10,11 @@ import (
 
 type Worker struct {
 	sync.RWMutex
-	LastGeneration []*dna1.Individual
+	LastGeneration []*dna6.Individual
 	SrcImg         image.Image
 	PlotSizeRect   image.Rectangle
 	Generation     int
-	Winners        []*dna1.Individual
+	Winners        []*dna6.Individual
 }
 
 func NewWorker(img image.Image) *Worker {
@@ -36,8 +36,8 @@ func (worker *Worker) Work() {
 	newDNA := make(chan string, 100)
 	go func() {
 		for {
-			dna := dna1.RndStr(50)
-			if !dna1.Valid(dna) {
+			dna := dna6.RndStr(50)
+			if !dna6.Valid(dna) {
 				continue
 			}
 			newDNA <- dna
@@ -49,11 +49,11 @@ func (worker *Worker) Work() {
 		lastGeneration := worker.LastGeneration
 		worker.RUnlock()
 
-		// Worker implements dna1.Required
-		lastGeneration = dna1.GenerationProcess(worker, lastGeneration, generation, newDNA)
+		// Worker implements dna6.Required
+		lastGeneration = dna6.GenerationProcess(worker, lastGeneration, generation, newDNA)
 
 		worker.Lock()
-		sort.Sort((&dna1.Sorter{
+		sort.Sort((&dna6.Sorter{
 			Children: worker.Winners,
 		}))
 		if len(worker.Winners) > 100 {

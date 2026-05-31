@@ -3,7 +3,7 @@ module image-formula-find
 go 1.25.0
 
 require (
-	github.com/agnivade/levenshtein v1.1.1
+	github.com/agnivade/levenshtein v1.2.1
 	github.com/arran4/golang-wordwrap v0.0.4
 	github.com/hajimehoshi/ebiten/v2 v2.9.8
 	golang.org/x/image v0.38.0

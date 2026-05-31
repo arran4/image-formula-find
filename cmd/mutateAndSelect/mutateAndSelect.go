@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"image"
-	"image-formula-find/dna1"
+	"image-formula-find/dna6"
 	"image/draw"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -39,7 +39,7 @@ func main() {
 	csvw := csv.NewWriter(fcsv)
 	defer csvw.Flush()
 	var row []string
-	var lastGeneration []*dna1.Individual
+	var lastGeneration []*dna6.Individual
 	for i := 0; i < childrenCount; i++ {
 		row = append(row,
 			fmt.Sprintf("C%d Dna", i+1),
@@ -55,21 +55,21 @@ func main() {
 	newDNA := make(chan string, 100)
 	go func() {
 		for {
-			dna := dna1.RndStr(50)
-			if !dna1.Valid(dna) {
+			dna := dna6.RndStr(50)
+			if !dna6.Valid(dna) {
 				continue
 			}
 			newDNA <- dna
 		}
 	}()
-	worker := &dna1.BasicRequired{
+	worker := &dna6.BasicRequired{
 		R: plotSize,
 		I: srcimg,
 	}
 	for generation := 0; generation < generations; generation++ {
 		log.Printf("Generation %d", generation+1)
 
-		lastGeneration = dna1.GenerationProcess(worker, lastGeneration, generation, newDNA)
+		lastGeneration = dna6.GenerationProcess(worker, lastGeneration, generation, newDNA)
 
 		if (generation % (generations / logGenerations)) == 0 {
 			row = make([]string, 0, headerSize)
