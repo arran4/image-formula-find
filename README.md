@@ -79,6 +79,10 @@ The `dna6` representation is built upon `dna5` and implements advanced evolution
 *   **Local Search (Hill Climbing):** Automatically explores the immediate neighborhood of the best individual's DNA to quickly hone in on exact mathematical constants instead of relying purely on random mutations over thousands of generations.
 *   **Performance:** Drastically reduces the number of generations needed to find an accurate fit.
 
+**Examples of DNA6 Evolution:**
+
+![Evolution DNA6](evolution-dna6.gif)
+
 ## Binaries
 
 *   **`mutateAndSelect`**: The main evolutionary engine. It runs the genetic algorithm, logs progress to `out.csv`, and periodically saves the best result to `out.png`.

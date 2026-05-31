@@ -567,6 +567,41 @@ jobs:
           branch: "update-evolution-dna5-gif"
           add-paths: "evolution-dna5.gif"
 
+  generate-gif-dna6:
+    name: Generate evolution-dna6 GIF
+    needs: [route]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev mesa-common-dev xorg-dev
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Generate Target Image
+        run: go run ./cmd/genFlagSpace
+      - name: Build
+        run: go build -v ./cmd/...
+      - name: Generate GIF
+        run: go run ./cmd/generateGifDna6 -generations 1000 -steps 10 -output evolution-dna6.gif
+      - name: Archive generated GIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: evolution-dna6
+          path: evolution-dna6.gif
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Update evolution-dna6.gif"
+          title: "Update evolution-dna6.gif"
+          body: "Automated PR to update evolution-dna6.gif"
+          branch: "update-evolution-dna6-gif"
+          add-paths: "evolution-dna6.gif"
+
   publish-draft:
     name: Publish draft release assets
     needs:
