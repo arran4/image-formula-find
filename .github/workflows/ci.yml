@@ -146,8 +146,19 @@ jobs:
       has_goreleaser: ${{ steps.detect.outputs.has_goreleaser }}
       has_dart_or_flutter_tests: ${{ steps.detect.outputs.has_dart_or_flutter_tests }}
       has_packaging: ${{ steps.detect.outputs.has_packaging }}
+      go_changed: ${{ steps.changes.outputs.go || 'false' }}
     steps:
       - uses: actions/checkout@v4
+
+      - id: changes
+        if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
 
       - id: detect
         shell: bash
@@ -476,8 +487,8 @@ jobs:
 
   generate-gif:
     name: Generate evolution GIF
-    needs: [route]
-    if: ${{ needs.route.outputs.run_code_checks == 'true' && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'pull_request') }}
+    needs: [route, discover]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && (needs.discover.outputs.go_changed == 'true' || github.event_name == 'workflow_dispatch') && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -501,8 +512,8 @@ jobs:
 
   generate-gif-dna4:
     name: Generate evolution-dna4 GIF
-    needs: [route]
-    if: ${{ needs.route.outputs.run_code_checks == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dna4-implementation' }}
+    needs: [route, discover]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && (needs.discover.outputs.go_changed == 'true' || github.event_name == 'workflow_dispatch') && ((github.event_name == 'push' && github.ref == 'refs/heads/dna4-implementation') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -534,8 +545,8 @@ jobs:
 
   generate-gif-dna5:
     name: Generate evolution-dna5 GIF
-    needs: [route]
-    if: ${{ needs.route.outputs.run_code_checks == 'true' && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch') }}
+    needs: [route, discover]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && (needs.discover.outputs.go_changed == 'true' || github.event_name == 'workflow_dispatch') && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -569,8 +580,8 @@ jobs:
 
   generate-gif-dna6:
     name: Generate evolution-dna6 GIF
-    needs: [route]
-    if: ${{ needs.route.outputs.run_code_checks == 'true' && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch') }}
+    needs: [route, discover]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && (needs.discover.outputs.go_changed == 'true' || github.event_name == 'workflow_dispatch') && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
