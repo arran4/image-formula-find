@@ -1,3 +1,4 @@
+version: 2
 project_name: image-formula-find
 before:
   hooks:
@@ -141,19 +142,16 @@ builds:
       - 6
       - 7
 archives:
-  - format: tar.gz
-    on:
-      goos:
-        - linux
-        - darwin
-  - format: zip
-    on:
-      goos:
-        - windows
+  - formats:
+    - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
